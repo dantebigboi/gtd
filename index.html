@@ -1208,3 +1208,459 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Весь CSS остаётся без изменений -->
+    <style>
+        /* ... (весь ваш CSS код остаётся без изменений) ... */
+    </style>
+</head>
+<body>
+    <!-- Весь HTML остаётся без изменений -->
+    <!-- ... -->
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+    <script>
+        // ПЕРЕМЕЩАЕМ ВСЕ ПЕРЕМЕННЫЕ И ФУНКЦИИ ВНУТРЬ ОБРАБОТЧИКА DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Инициализация календарей
+            flatpickr('.datepicker', {
+                enableTime: true,
+                dateFormat: "d.m.Y H:i",
+                time_24hr: true,
+                locale: "ru",
+                minDate: "today"
+            });
+
+            // Получаем элементы ДОМА
+            const addTaskBtn = document.getElementById('addTaskBtn');
+            const saveTaskBtn = document.getElementById('saveTaskBtn');
+            const showCompletedBtn = document.getElementById('showCompleted');
+            const clearTasksBtn = document.getElementById('clearTasks');
+            const searchInput = document.getElementById('searchTasks');
+            const taskModal = document.getElementById('taskModal');
+            const closeModal = document.querySelector('.close-modal');
+            const notification = document.getElementById('notification');
+
+            // Счетчик для генерации ID
+            let taskId = 1;
+            let currentEditTaskId = null;
+            
+            // Объект для фильтров
+            const filters = {
+                search: '',
+                tag: 'all',
+                priority: 'all'
+            };
+
+            // Инициализация приложений
+            loadTasks();
+            checkDueTasks();
+            updateTaskCounters();
+            startCloudSync();
+
+            // ================ ОБРАБОТЧИКИ СОБЫТИЙ ================
+            addTaskBtn.addEventListener('click', addTask);
+            saveTaskBtn.addEventListener('click', saveEditedTask);
+            clearTasksBtn.addEventListener('click', clearAllTasks);
+            searchInput.addEventListener('input', applyFilters);
+            closeModal.addEventListener('click', () => taskModal.style.display = 'none');
+            document.querySelector('.notification-close').addEventListener('click', () => {
+                notification.classList.remove('show');
+            });
+
+            // ================ ОСНОВНЫЕ ФУНКЦИИ ================
+            function addTask() {
+                const title = document.getElementById('taskTitle').value.trim();
+                const description = document.getElementById('taskDescription').value.trim();
+                const dueDate = document.getElementById('taskDueDate').value;
+                const priority = document.getElementById('taskPriority').value;
+                const tags = document.getElementById('taskTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+                
+                if (!title) {
+                    showNotification('Введите название задачи!', 'error');
+                    return;
+                }
+                
+                const task = {
+                    id: `task_${taskId++}`,
+                    title,
+                    description,
+                    dueDate: dueDate || null,
+                    priority,
+                    tags,
+                    category: 'inbox',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                saveTask(task);
+                renderTask(task);
+                resetForm();
+                updateTaskCounters();
+                showNotification('Задача добавлена!', 'success');
+            }
+
+            function saveTask(task) {
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || {});
+                tasks[task.id] = task;
+                localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+                syncWithCloud(task);
+            }
+
+            function renderTask(task) {
+                const list = document.getElementById(task.category);
+                const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+                const overdueClass = isOverdue ? 'overdue' : '';
+                
+                const taskElement = document.createElement('div');
+                taskElement.className = `task-item ${task.category === 'completed' ? 'completed' : ''} ${overdueClass}`;
+                taskElement.id = task.id;
+                taskElement.innerHTML = `
+                    <div class="task-header">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-priority priority-${task.priority}"></div>
+                    </div>
+                    
+                    ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+                    
+                    ${task.tags.length ? `
+                    <div class="task-tags">
+                        ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+                    </div>
+                    ` : ''}
+                    
+                    ${task.dueDate ? `
+                    <div class="task-due ${overdueClass}">
+                        <i class="far fa-clock"></i>
+                        ${formatDate(task.dueDate)}
+                        ${isOverdue ? '<span>(Просрочено)</span>' : ''}
+                    </div>
+                    ` : ''}
+                    
+                    <div class="task-actions">
+                        <button class="edit-btn" data-id="${task.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" data-id="${task.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        ${task.category !== 'completed' ? `
+                        <button class="complete-btn" data-id="${task.id}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+                
+                list.appendChild(taskElement);
+                
+                // Добавляем обработчики для новых элементов
+                taskElement.querySelector('.edit-btn').addEventListener('click', openEditModal);
+                taskElement.querySelector('.delete-btn').addEventListener('click', deleteTask);
+                
+                if (taskElement.querySelector('.complete-btn')) {
+                    taskElement.querySelector('.complete-btn').addEventListener('click', completeTask);
+                }
+                
+                taskElement.querySelector('.task-title').addEventListener('click', () => {
+                    openEditModal({ currentTarget: taskElement.querySelector('.edit-btn') });
+                });
+            }
+
+            function loadTasks() {
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || {});
+                
+                // Находим максимальный ID
+                const maxId = Math.max(0, ...Object.values(tasks).map(task => 
+                    parseInt(task.id.replace('task_', '')) || 0
+                );
+                taskId = maxId + 1;
+                
+                // Очищаем списки
+                ['inbox', 'inProgress', 'completed'].forEach(id => {
+                    document.getElementById(id).innerHTML = '';
+                });
+                
+                // Рендерим задачи
+                Object.values(tasks).forEach(renderTask);
+            }
+
+            function deleteTask(event) {
+                const taskId = event.currentTarget.dataset.id;
+                
+                if (confirm('Удалить задачу?')) {
+                    const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || {});
+                    delete tasks[taskId];
+                    localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+                    
+                    document.getElementById(taskId)?.remove();
+                    updateTaskCounters();
+                    showNotification('Задача удалена', 'info');
+                    syncWithCloud({ id: taskId, deleted: true });
+                }
+            }
+
+            function completeTask(event) {
+                const taskId = event.currentTarget.dataset.id;
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || {});
+                
+                if (tasks[taskId]) {
+                    tasks[taskId].category = 'completed';
+                    tasks[taskId].completedAt = new Date().toISOString();
+                    localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+                    
+                    const taskElement = document.getElementById(taskId);
+                    if (!taskElement) return;
+                    
+                    taskElement.classList.add('completed');
+                    document.getElementById('completed').appendChild(taskElement);
+                    
+                    const actions = taskElement.querySelector('.task-actions');
+                    actions.innerHTML = `
+                        <button class="edit-btn" data-id="${taskId}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" data-id="${taskId}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        <button class="reopen-btn" data-id="${taskId}">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    `;
+                    
+                    actions.querySelector('.edit-btn').addEventListener('click', openEditModal);
+                    actions.querySelector('.delete-btn').addEventListener('click', deleteTask);
+                    actions.querySelector('.reopen-btn').addEventListener('click', reopenTask);
+                    
+                    updateTaskCounters();
+                    showNotification('Задача завершена!', 'success');
+                    syncWithCloud(tasks[taskId]);
+                }
+            }
+
+            function reopenTask(event) {
+                const taskId = event.currentTarget.dataset.id;
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || {});
+                
+                if (tasks[taskId]) {
+                    tasks[taskId].category = 'inbox';
+                    delete tasks[taskId].completedAt;
+                    localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+                    
+                    const taskElement = document.getElementById(taskId);
+                    if (!taskElement) return;
+                    
+                    taskElement.classList.remove('completed');
+                    document.getElementById('inbox').appendChild(taskElement);
+                    
+                    const actions = taskElement.querySelector('.task-actions');
+                    actions.innerHTML = `
+                        <button class="edit-btn" data-id="${taskId}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" data-id="${taskId}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        <button class="complete-btn" data-id="${taskId}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    `;
+                    
+                    actions.querySelector('.edit-btn').addEventListener('click', openEditModal);
+                    actions.querySelector('.delete-btn').addEventListener('click', deleteTask);
+                    actions.querySelector('.complete-btn').addEventListener('click', completeTask);
+                    
+                    updateTaskCounters();
+                    showNotification('Задача открыта снова', 'info');
+                    syncWithCloud(tasks[taskId]);
+                }
+            }
+
+            function openEditModal(event) {
+                const taskId = event.currentTarget.dataset.id;
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || {});
+                const task = tasks[taskId];
+                
+                if (task) {
+                    currentEditTaskId = taskId;
+                    
+                    // Заполняем форму
+                    document.getElementById('editTaskTitle').value = task.title;
+                    document.getElementById('editTaskDescription').value = task.description || '';
+                    document.getElementById('editTaskDueDate').value = task.dueDate || '';
+                    document.getElementById('editTaskPriority').value = task.priority;
+                    document.getElementById('editTaskTags').value = task.tags.join(', ');
+                    document.getElementById('editTaskCategory').value = task.category;
+                    
+                    // Инициализируем календарь
+                    flatpickr('#editTaskDueDate', {
+                        enableTime: true,
+                        dateFormat: "d.m.Y H:i",
+                        time_24hr: true,
+                        locale: "ru",
+                        minDate: "today"
+                    });
+                    
+                    taskModal.style.display = 'flex';
+                }
+            }
+
+            function saveEditedTask() {
+                if (!currentEditTaskId) return;
+                
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || {});
+                const task = tasks[currentEditTaskId];
+                
+                if (task) {
+                    // Обновляем данные
+                    task.title = document.getElementById('editTaskTitle').value.trim();
+                    task.description = document.getElementById('editTaskDescription').value.trim();
+                    task.dueDate = document.getElementById('editTaskDueDate').value || null;
+                    task.priority = document.getElementById('editTaskPriority').value;
+                    task.tags = document.getElementById('editTaskTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+                    task.category = document.getElementById('editTaskCategory').value;
+                    task.updatedAt = new Date().toISOString();
+                    
+                    // Сохраняем и обновляем
+                    localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+                    document.getElementById(task.id)?.remove();
+                    renderTask(task);
+                    updateTaskCounters();
+                    taskModal.style.display = 'none';
+                    showNotification('Задача обновлена', 'success');
+                    syncWithCloud(task);
+                }
+            }
+
+            function resetForm() {
+                document.getElementById('taskTitle').value = '';
+                document.getElementById('taskDescription').value = '';
+                document.getElementById('taskDueDate').value = '';
+                document.getElementById('taskPriority').value = 'medium';
+                document.getElementById('taskTags').value = '';
+            }
+
+            function updateTaskCounters() {
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || {});
+                const counts = { inbox: 0, inProgress: 0, completed: 0 };
+                
+                Object.values(tasks).forEach(task => {
+                    if (counts.hasOwnProperty(task.category)) {
+                        counts[task.category]++;
+                    }
+                });
+                
+                document.querySelectorAll('.task-count').forEach((el, index) => {
+                    const category = ['inbox', 'inProgress', 'completed'][index];
+                    el.textContent = counts[category];
+                });
+            }
+
+            function checkDueTasks() {
+                const now = new Date();
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || {});
+                let hasDueTasks = false;
+                
+                Object.values(tasks).forEach(task => {
+                    if (task.dueDate && task.category !== 'completed') {
+                        const dueDate = new Date(task.dueDate);
+                        const diffHours = Math.floor((dueDate - now) / (1000 * 60 * 60));
+                        
+                        if (diffHours < 24 && diffHours > 0) {
+                            hasDueTasks = true;
+                        }
+                    }
+                });
+                
+                if (hasDueTasks) {
+                    showNotification('У вас есть задачи с истекающим сроком!', 'warning');
+                }
+                
+                setTimeout(checkDueTasks, 30 * 60 * 1000);
+            }
+
+            function showNotification(message, type = 'info') {
+                const messageEl = notification.querySelector('.notification-message');
+                messageEl.textContent = message;
+                
+                const colors = {
+                    info: '#3498db',
+                    success: '#27ae60',
+                    warning: '#f39c12',
+                    error: '#e74c3c'
+                };
+                
+                notification.style.borderLeft = `4px solid ${colors[type]}`;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 5000);
+            }
+
+            function syncWithCloud(task) {
+                const syncStatus = document.querySelector('.sync-status');
+                syncStatus.classList.remove('synced');
+                
+                setTimeout(() => {
+                    syncStatus.classList.add('synced');
+                    console.log(`Задача синхронизирована: ${task.id}`);
+                }, 1000);
+            }
+
+            function startCloudSync() {
+                setInterval(() => {
+                    console.log('Автосинхронизация с облаком...');
+                    const syncStatus = document.querySelector('.sync-status');
+                    syncStatus.classList.remove('synced');
+                    
+                    setTimeout(() => syncStatus.classList.add('synced'), 1000);
+                }, 120000);
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            function clearAllTasks() {
+                if (confirm('Удалить ВСЕ задачи?')) {
+                    localStorage.removeItem('gtd_tasks');
+                    ['inbox', 'inProgress', 'completed'].forEach(id => {
+                        document.getElementById(id).innerHTML = '';
+                    });
+                    updateTaskCounters();
+                    showNotification('Все задачи удалены', 'info');
+                }
+            }
+
+            function applyFilters() {
+                filters.search = searchInput.value.toLowerCase();
+                const tasks = document.querySelectorAll('.task-item');
+                
+                tasks.forEach(task => {
+                    const title = task.querySelector('.task-title').textContent.toLowerCase();
+                    const description = task.querySelector('.task-description')?.textContent.toLowerCase() || '';
+                    const tags = Array.from(task.querySelectorAll('.task-tag')).map(tag => tag.textContent.toLowerCase());
+                    
+                    const matchesSearch = title.includes(filters.search) || 
+                                         description.includes(filters.search) ||
+                                         tags.some(tag => tag.includes(filters.search));
+                    
+                    task.style.display = matchesSearch ? 'block' : 'none';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
