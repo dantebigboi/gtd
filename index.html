@@ -3,179 +3,838 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Простая система GTD</title>
+    <title>Расширенная система GTD</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
+        :root {
+            --primary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --gray: #95a5a6;
+            --low-priority: #2ecc71;
+            --medium-priority: #f1c40f;
+            --high-priority: #e74c3c;
+        }
+        
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
         body {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
             background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-        }
-        .input-section {
-            display: flex;
-            margin-bottom: 20px;
-            gap: 10px;
-        }
-        #taskInput {
-            flex-grow: 1;
-            padding: 12px;
-            border: 2px solid #3498db;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .categories {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            gap: 15px;
-        }
-        .category {
-            background-color: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            flex: 1;
-        }
-        .category h2 {
-            font-size: 18px;
-            margin-top: 0;
-            color: #2c3e50;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-            min-height: 100px;
-        }
-        li {
-            background-color: #f8f9fa;
-            margin: 8px 0;
-            padding: 12px;
-            border-radius: 4px;
+        
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-left: 4px solid #3498db;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
         }
-        li.completed {
-            border-left-color: #27ae60;
-            text-decoration: line-through;
-            color: #7f8c8d;
+        
+        h1 {
+            color: var(--dark);
+            font-size: 2.5rem;
         }
-        .delete-btn {
-            background-color: #e74c3c;
-            color: white;
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
             border: none;
             border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            height: fit-content;
+        }
+        
+        .filter-section {
+            margin-bottom: 25px;
+        }
+        
+        .filter-section h3 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+            color: var(--dark);
+        }
+        
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .tag {
+            background-color: var(--light);
             padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tag:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .tag.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .priority-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .priority-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 4px;
             cursor: pointer;
         }
-        .delete-btn:hover {
-            background-color: #c0392b;
+        
+        .priority-item:hover {
+            background-color: var(--light);
         }
-        @media (max-width: 600px) {
-            .categories {
+        
+        .priority-item.active {
+            background-color: var(--light);
+            font-weight: bold;
+        }
+        
+        .priority-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .low-dot {
+            background-color: var(--low-priority);
+        }
+        
+        .medium-dot {
+            background-color: var(--medium-priority);
+        }
+        
+        .high-dot {
+            background-color: var(--high-priority);
+        }
+        
+        .task-input-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .input-group input, 
+        .input-group textarea, 
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus, 
+        .input-group textarea:focus, 
+        .input-group select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .input-row .input-group {
+            flex: 1;
+        }
+        
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .category {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .category-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .task-count {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .task-list {
+            padding: 20px;
+            min-height: 400px;
+        }
+        
+        .task-item {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary);
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .task-item.completed {
+            border-left-color: var(--success);
+        }
+        
+        .task-item.overdue {
+            border-left-color: var(--danger);
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .task-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            flex-grow: 1;
+            word-break: break-word;
+        }
+        
+        .task-priority {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        
+        .priority-low {
+            background-color: var(--low-priority);
+        }
+        
+        .priority-medium {
+            background-color: var(--medium-priority);
+        }
+        
+        .priority-high {
+            background-color: var(--high-priority);
+        }
+        
+        .task-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        
+        .task-tag {
+            background-color: #e1f0fa;
+            color: var(--primary);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .task-due {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 8px;
+        }
+        
+        .task-due.overdue {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        
+        .task-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .task-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray);
+            transition: color 0.3s;
+            font-size: 1rem;
+        }
+        
+        .task-actions button:hover {
+            color: var(--dark);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1001;
+            transform: translateX(150%);
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification-icon {
+            font-size: 1.5rem;
+        }
+        
+        .notification-info .notification-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        
+        .cloud-sync {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: var(--light);
+            padding: 10px 15px;
+            border-radius: 30px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .sync-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--gray);
+        }
+        
+        .sync-status.synced {
+            background-color: var(--success);
+        }
+        
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: 2;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .input-row {
                 flex-direction: column;
+                gap: 0;
+            }
+            
+            .categories {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <h1>Система GTD</h1>
-    
-    <div class="input-section">
-        <input type="text" id="taskInput" placeholder="Добавьте новую задачу..." autofocus>
-        <button onclick="addTask()">Добавить</button>
-    </div>
-    
-    <div class="categories">
-        <div class="category">
-            <h2>Входящие</h2>
-            <ul id="inbox" ondrop="drop(event)" ondragover="allowDrop(event)"></ul>
+    <header>
+        <h1><i class="fas fa-tasks"></i> Расширенная система GTD</h1>
+        <div class="controls">
+            <button class="btn btn-primary" id="showCompleted">
+                <i class="fas fa-check-circle"></i> Показать завершённые
+            </button>
+            <button class="btn btn-danger" id="clearTasks">
+                <i class="fas fa-trash-alt"></i> Очистить все
+            </button>
         </div>
-        
-        <div class="category">
-            <h2>В процессе</h2>
-            <ul id="inProgress" ondrop="drop(event)" ondragover="allowDrop(event)"></ul>
+    </header>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="filter-section">
+                <h3><i class="fas fa-filter"></i> Фильтры</h3>
+                <div class="input-group">
+                    <input type="text" id="searchTasks" placeholder="Поиск задач...">
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <h3><i class="fas fa-tags"></i> Теги</h3>
+                <div class="tag-list">
+                    <div class="tag active">Все</div>
+                    <div class="tag">Работа</div>
+                    <div class="tag">Личное</div>
+                    <div class="tag">Здоровье</div>
+                    <div class="tag">Финансы</div>
+                    <div class="tag">Обучение</div>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <h3><i class="fas fa-exclamation-circle"></i> Приоритет</h3>
+                <div class="priority-filter">
+                    <div class="priority-item active">
+                        <div class="priority-dot"></div>
+                        <span>Все приоритеты</span>
+                    </div>
+                    <div class="priority-item">
+                        <div class="priority-dot low-dot"></div>
+                        <span>Низкий</span>
+                    </div>
+                    <div class="priority-item">
+                        <div class="priority-dot medium-dot"></div>
+                        <span>Средний</span>
+                    </div>
+                    <div class="priority-item">
+                        <div class="priority-dot high-dot"></div>
+                        <span>Высокий</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cloud-sync">
+                <div class="sync-status synced"></div>
+                <span>Синхронизировано с облаком</span>
+            </div>
         </div>
-        
-        <div class="category">
-            <h2>Завершённые</h2>
-            <ul id="completed" ondrop="drop(event)" ondragover="allowDrop(event)"></ul>
+
+        <div class="content">
+            <div class="task-input-section">
+                <h2><i class="fas fa-plus-circle"></i> Новая задача</h2>
+                <div class="input-group">
+                    <label for="taskTitle">Заголовок задачи</label>
+                    <input type="text" id="taskTitle" placeholder="Что нужно сделать?">
+                </div>
+                
+                <div class="input-group">
+                    <label for="taskDescription">Описание</label>
+                    <textarea id="taskDescription" rows="3" placeholder="Детали задачи..."></textarea>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="taskDueDate">Срок выполнения</label>
+                        <input type="text" id="taskDueDate" class="datepicker" placeholder="Выберите дату">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="taskPriority">Приоритет</label>
+                        <select id="taskPriority">
+                            <option value="low">Низкий</option>
+                            <option value="medium" selected>Средний</option>
+                            <option value="high">Высокий</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="taskTags">Теги (через запятую)</label>
+                    <input type="text" id="taskTags" placeholder="работа, срочно, проект">
+                </div>
+                
+                <button class="btn btn-success" id="addTaskBtn">
+                    <i class="fas fa-plus"></i> Добавить задачу
+                </button>
+            </div>
+            
+            <div class="categories">
+                <div class="category">
+                    <div class="category-header">
+                        <h2><i class="fas fa-inbox"></i> Входящие</h2>
+                        <span class="task-count">0</span>
+                    </div>
+                    <div class="task-list" id="inbox"></div>
+                </div>
+                
+                <div class="category">
+                    <div class="category-header">
+                        <h2><i class="fas fa-spinner"></i> В процессе</h2>
+                        <span class="task-count">0</span>
+                    </div>
+                    <div class="task-list" id="inProgress"></div>
+                </div>
+                
+                <div class="category">
+                    <div class="category-header">
+                        <h2><i class="fas fa-check-circle"></i> Завершённые</h2>
+                        <span class="task-count">0</span>
+                    </div>
+                    <div class="task-list" id="completed"></div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Редактирование задачи</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="editTaskTitle">Заголовок задачи</label>
+                    <input type="text" id="editTaskTitle">
+                </div>
+                
+                <div class="input-group">
+                    <label for="editTaskDescription">Описание</label>
+                    <textarea id="editTaskDescription" rows="4"></textarea>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="editTaskDueDate">Срок выполнения</label>
+                        <input type="text" id="editTaskDueDate" class="datepicker">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="editTaskPriority">Приоритет</label>
+                        <select id="editTaskPriority">
+                            <option value="low">Низкий</option>
+                            <option value="medium">Средний</option>
+                            <option value="high">Высокий</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="editTaskTags">Теги (через запятую)</label>
+                    <input type="text" id="editTaskTags">
+                </div>
+                
+                <div class="input-group">
+                    <label for="editTaskCategory">Статус</label>
+                    <select id="editTaskCategory">
+                        <option value="inbox">Входящие</option>
+                        <option value="inProgress">В процессе</option>
+                        <option value="completed">Завершённые</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-success" id="saveTaskBtn">
+                    <i class="fas fa-save"></i> Сохранить изменения
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <div class="notification-icon">
+            <i class="fas fa-bell"></i>
+        </div>
+        <div class="notification-info">
+            <div class="notification-title">Напоминание</div>
+            <div class="notification-message">У вас есть задачи с истекающим сроком</div>
+        </div>
+        <button class="notification-close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
     <script>
         // Инициализация при загрузке
-        document.addEventListener('DOMContentLoaded', loadTasks);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Инициализация календарей
+            flatpickr('.datepicker', {
+                enableTime: true,
+                dateFormat: "d.m.Y H:i",
+                time_24hr: true,
+                locale: "ru",
+                minDate: "today"
+            });
+            
+            // Загрузка задач
+            loadTasks();
+            
+            // Проверка задач на истекающий срок
+            checkDueTasks();
+            
+            // Обновление счетчиков задач
+            updateTaskCounters();
+            
+            // Запуск синхронизации с облаком
+            startCloudSync();
+        });
         
-        // Счётчик для генерации ID
+        // Элементы DOM
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const saveTaskBtn = document.getElementById('saveTaskBtn');
+        const showCompletedBtn = document.getElementById('showCompleted');
+        const clearTasksBtn = document.getElementById('clearTasks');
+        const searchInput = document.getElementById('searchTasks');
+        const taskModal = document.getElementById('taskModal');
+        const closeModal = document.querySelector('.close-modal');
+        const notification = document.getElementById('notification');
+        
+        // Счетчик для генерации ID
         let taskId = 1;
+        let currentEditTaskId = null;
+        
+        // Объект для хранения состояния фильтров
+        const filters = {
+            search: '',
+            tag: 'all',
+            priority: 'all'
+        };
+        
+        // Добавление новой задачи
+        addTaskBtn.addEventListener('click', addTask);
         
         function addTask() {
-            const input = document.getElementById('taskInput');
-            const taskText = input.value.trim();
+            const title = document.getElementById('taskTitle').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+            const dueDate = document.getElementById('taskDueDate').value;
+            const priority = document.getElementById('taskPriority').value;
+            const tags = document.getElementById('taskTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
             
-            if (taskText === '') return;
+            if (!title) {
+                alert('Пожалуйста, введите название задачи');
+                return;
+            }
             
             const task = {
                 id: `task_${taskId++}`,
-                text: taskText,
+                title,
+                description,
+                dueDate: dueDate || null,
+                priority,
+                tags,
                 category: 'inbox',
-                timestamp: new Date().getTime()
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             };
             
             saveTask(task);
             renderTask(task);
-            input.value = '';
-            input.focus();
+            resetForm();
+            updateTaskCounters();
+            showNotification('Задача добавлена!', 'success');
         }
         
+        // Сохранение задачи
         function saveTask(task) {
             const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
             tasks[task.id] = task;
             localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+            
+            // Синхронизация с облаком (имитация)
+            syncWithCloud(task);
         }
         
+        // Отображение задачи
         function renderTask(task) {
             const list = document.getElementById(task.category);
-            const taskElement = document.createElement('li');
-            taskElement.id = task.id;
-            taskElement.draggable = true;
-            taskElement.ondragstart = drag;
+            const taskElement = document.createElement('div');
             
+            // Определяем классы для просроченных задач
+            const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+            const overdueClass = isOverdue ? 'overdue' : '';
+            
+            taskElement.className = `task-item ${task.category === 'completed' ? 'completed' : ''} ${overdueClass}`;
+            taskElement.id = task.id;
             taskElement.innerHTML = `
-                <span>${task.text}</span>
-                <div>
-                    <button class="delete-btn" onclick="deleteTask('${task.id}')">✕</button>
+                <div class="task-header">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-priority priority-${task.priority}"></div>
+                </div>
+                
+                ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+                
+                ${task.tags.length ? `
+                <div class="task-tags">
+                    ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+                </div>
+                ` : ''}
+                
+                ${task.dueDate ? `
+                <div class="task-due ${overdueClass}">
+                    <i class="far fa-clock"></i>
+                    ${formatDate(task.dueDate)}
+                    ${isOverdue ? '<span>(Просрочено)</span>' : ''}
+                </div>
+                ` : ''}
+                
+                <div class="task-actions">
+                    <button class="edit-btn" data-id="${task.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-btn" data-id="${task.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    ${task.category !== 'completed' ? `
+                    <button class="complete-btn" data-id="${task.id}">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    ` : ''}
                 </div>
             `;
             
             list.appendChild(taskElement);
+            
+            // Добавляем обработчики событий
+            taskElement.querySelector('.edit-btn').addEventListener('click', openEditModal);
+            taskElement.querySelector('.delete-btn').addEventListener('click', deleteTask);
+            
+            if (taskElement.querySelector('.complete-btn')) {
+                taskElement.querySelector('.complete-btn').addEventListener('click', completeTask);
+            }
+            
+            // Добавляем обработчик для открытия редактирования по клику на заголовок
+            taskElement.querySelector('.task-title').addEventListener('click', () => {
+                openEditModal({ currentTarget: taskElement.querySelector('.edit-btn') });
+            });
         }
         
+        // Загрузка задач
         function loadTasks() {
             const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
             
@@ -185,45 +844,366 @@
                 return idNum > max ? idNum : max;
             }, 0) + 1;
             
-            // Рендерим задачи по категориям
+            // Очищаем списки
+            document.getElementById('inbox').innerHTML = '';
+            document.getElementById('inProgress').innerHTML = '';
+            document.getElementById('completed').innerHTML = '';
+            
+            // Рендерим задачи
             Object.values(tasks).forEach(task => {
                 renderTask(task);
             });
         }
         
-        function deleteTask(taskId) {
-            const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
-            delete tasks[taskId];
-            localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+        // Удаление задачи
+        function deleteTask(event) {
+            const taskId = event.currentTarget.dataset.id;
             
-            const taskElement = document.getElementById(taskId);
-            if (taskElement) taskElement.remove();
-        }
-        
-        // Функции для drag-and-drop
-        function allowDrop(ev) {
-            ev.preventDefault();
-        }
-        
-        function drag(ev) {
-            ev.dataTransfer.setData("text", ev.target.id);
-        }
-        
-        function drop(ev) {
-            ev.preventDefault();
-            const taskId = ev.dataTransfer.getData("text");
-            const taskElement = document.getElementById(taskId);
-            const newCategory = ev.target.closest('ul').id;
-            
-            // Обновляем данные
-            const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
-            if (tasks[taskId]) {
-                tasks[taskId].category = newCategory;
+            if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
+                delete tasks[taskId];
                 localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+                
+                document.getElementById(taskId).remove();
+                updateTaskCounters();
+                showNotification('Задача удалена', 'info');
+                
+                // Синхронизация с облаком (имитация)
+                syncWithCloud({ id: taskId, deleted: true });
+            }
+        }
+        
+        // Завершение задачи
+        function completeTask(event) {
+            const taskId = event.currentTarget.dataset.id;
+            const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
+            
+            if (tasks[taskId]) {
+                tasks[taskId].category = 'completed';
+                tasks[taskId].completedAt = new Date().toISOString();
+                localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+                
+                // Перемещаем задачу в список завершённых
+                const taskElement = document.getElementById(taskId);
+                taskElement.classList.add('completed');
+                document.getElementById('completed').appendChild(taskElement);
+                
+                // Обновляем кнопки
+                const actions = taskElement.querySelector('.task-actions');
+                actions.innerHTML = `
+                    <button class="edit-btn" data-id="${taskId}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-btn" data-id="${taskId}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <button class="reopen-btn" data-id="${taskId}">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                `;
+                
+                // Добавляем обработчики
+                actions.querySelector('.edit-btn').addEventListener('click', openEditModal);
+                actions.querySelector('.delete-btn').addEventListener('click', deleteTask);
+                actions.querySelector('.reopen-btn').addEventListener('click', reopenTask);
+                
+                updateTaskCounters();
+                showNotification('Задача завершена!', 'success');
+                
+                // Синхронизация с облаком
+                syncWithCloud(tasks[taskId]);
+            }
+        }
+        
+        // Повторное открытие задачи
+        function reopenTask(event) {
+            const taskId = event.currentTarget.dataset.id;
+            const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
+            
+            if (tasks[taskId]) {
+                tasks[taskId].category = 'inbox';
+                delete tasks[taskId].completedAt;
+                localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+                
+                // Перемещаем задачу в список входящих
+                const taskElement = document.getElementById(taskId);
+                taskElement.classList.remove('completed');
+                document.getElementById('inbox').appendChild(taskElement);
+                
+                // Обновляем кнопки
+                const actions = taskElement.querySelector('.task-actions');
+                actions.innerHTML = `
+                    <button class="edit-btn" data-id="${taskId}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-btn" data-id="${taskId}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <button class="complete-btn" data-id="${taskId}">
+                        <i class="fas fa-check"></i>
+                    </button>
+                `;
+                
+                // Добавляем обработчики
+                actions.querySelector('.edit-btn').addEventListener('click', openEditModal);
+                actions.querySelector('.delete-btn').addEventListener('click', deleteTask);
+                actions.querySelector('.complete-btn').addEventListener('click', completeTask);
+                
+                updateTaskCounters();
+                showNotification('Задача открыта снова', 'info');
+                
+                // Синхронизация с облаком
+                syncWithCloud(tasks[taskId]);
+            }
+        }
+        
+        // Открытие модального окна для редактирования
+        function openEditModal(event) {
+            const taskId = event.currentTarget.dataset.id;
+            const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
+            const task = tasks[taskId];
+            
+            if (task) {
+                currentEditTaskId = taskId;
+                
+                // Заполняем форму редактирования
+                document.getElementById('editTaskTitle').value = task.title;
+                document.getElementById('editTaskDescription').value = task.description || '';
+                document.getElementById('editTaskDueDate').value = task.dueDate || '';
+                document.getElementById('editTaskPriority').value = task.priority;
+                document.getElementById('editTaskTags').value = task.tags.join(', ');
+                document.getElementById('editTaskCategory').value = task.category;
+                
+                // Инициализируем календарь
+                flatpickr('#editTaskDueDate', {
+                    enableTime: true,
+                    dateFormat: "d.m.Y H:i",
+                    time_24hr: true,
+                    locale: "ru",
+                    minDate: "today"
+                });
+                
+                // Показываем модальное окно
+                taskModal.style.display = 'flex';
+            }
+        }
+        
+        // Сохранение изменений задачи
+        saveTaskBtn.addEventListener('click', saveEditedTask);
+        
+        function saveEditedTask() {
+            if (!currentEditTaskId) return;
+            
+            const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
+            const task = tasks[currentEditTaskId];
+            
+            if (task) {
+                // Обновляем данные задачи
+                task.title = document.getElementById('editTaskTitle').value.trim();
+                task.description = document.getElementById('editTaskDescription').value.trim();
+                task.dueDate = document.getElementById('editTaskDueDate').value || null;
+                task.priority = document.getElementById('editTaskPriority').value;
+                task.tags = document.getElementById('editTaskTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+                task.category = document.getElementById('editTaskCategory').value;
+                task.updatedAt = new Date().toISOString();
+                
+                // Сохраняем обновлённую задачу
+                localStorage.setItem('gtd_tasks', JSON.stringify(tasks));
+                
+                // Перерисовываем задачу
+                document.getElementById(task.id).remove();
+                renderTask(task);
+                
+                // Обновляем счетчики
+                updateTaskCounters();
+                
+                // Закрываем модальное окно
+                taskModal.style.display = 'none';
+                
+                showNotification('Задача обновлена', 'success');
+                
+                // Синхронизация с облаком
+                syncWithCloud(task);
+            }
+        }
+        
+        // Закрытие модального окна
+        closeModal.addEventListener('click', () => {
+            taskModal.style.display = 'none';
+        });
+        
+        // Сброс формы
+        function resetForm() {
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDescription').value = '';
+            document.getElementById('taskDueDate').value = '';
+            document.getElementById('taskPriority').value = 'medium';
+            document.getElementById('taskTags').value = '';
+        }
+        
+        // Обновление счетчиков задач
+        function updateTaskCounters() {
+            const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
+            const counts = {
+                inbox: 0,
+                inProgress: 0,
+                completed: 0
+            };
+            
+            Object.values(tasks).forEach(task => {
+                if (counts.hasOwnProperty(task.category)) {
+                    counts[task.category]++;
+                }
+            });
+            
+            document.querySelectorAll('.task-count').forEach((el, index) => {
+                const category = ['inbox', 'inProgress', 'completed'][index];
+                el.textContent = counts[category];
+            });
+        }
+        
+        // Проверка задач с истекающим сроком
+        function checkDueTasks() {
+            const now = new Date();
+            const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
+            let hasDueTasks = false;
+            
+            Object.values(tasks).forEach(task => {
+                if (task.dueDate && task.category !== 'completed') {
+                    const dueDate = new Date(task.dueDate);
+                    const diffHours = Math.floor((dueDate - now) / (1000 * 60 * 60));
+                    
+                    if (diffHours < 24 && diffHours > 0) {
+                        hasDueTasks = true;
+                    }
+                }
+            });
+            
+            if (hasDueTasks) {
+                showNotification('У вас есть задачи с истекающим сроком!', 'warning');
             }
             
-            // Перемещаем элемент в DOM
-            ev.target.closest('ul').appendChild(taskElement);
+            // Повторяем проверку каждые 30 минут
+            setTimeout(checkDueTasks, 30 * 60 * 1000);
+        }
+        
+        // Показ уведомлений
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const messageEl = notification.querySelector('.notification-message');
+            
+            // Устанавливаем сообщение
+            messageEl.textContent = message;
+            
+            // Устанавливаем цвет в зависимости от типа
+            const colors = {
+                info: '#3498db',
+                success: '#27ae60',
+                warning: '#f39c12',
+                error: '#e74c3c'
+            };
+            
+            notification.style.borderLeft = `4px solid ${colors[type]}`;
+            
+            // Показываем уведомление
+            notification.classList.add('show');
+            
+            // Автоматическое скрытие через 5 секунд
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+        
+        // Закрытие уведомления
+        document.querySelector('.notification-close').addEventListener('click', () => {
+            notification.classList.remove('show');
+        });
+        
+        // Синхронизация с облаком (имитация)
+        function syncWithCloud(task) {
+            // В реальном приложении здесь был бы вызов API
+            console.log(`Синхронизация задачи с облаком: ${task.id}`);
+            
+            // Обновляем статус синхронизации
+            const syncStatus = document.querySelector('.sync-status');
+            syncStatus.classList.remove('synced');
+            
+            setTimeout(() => {
+                syncStatus.classList.add('synced');
+            }, 1000);
+        }
+        
+        // Запуск периодической синхронизации
+        function startCloudSync() {
+            // Имитация синхронизации каждые 2 минуты
+            setInterval(() => {
+                const tasks = JSON.parse(localStorage.getItem('gtd_tasks') || '{}');
+                console.log('Автоматическая синхронизация с облаком...');
+                
+                // Обновляем статус синхронизации
+                const syncStatus = document.querySelector('.sync-status');
+                syncStatus.classList.remove('synced');
+                
+                setTimeout(() => {
+                    syncStatus.classList.add('synced');
+                }, 1000);
+            }, 120000);
+        }
+        
+        // Форматирование даты
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            
+            const date = new Date(dateString);
+            return new Intl.DateTimeFormat('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+        
+        // Очистка всех задач
+        clearTasksBtn.addEventListener('click', () => {
+            if (confirm('Вы уверены, что хотите удалить ВСЕ задачи? Это действие нельзя отменить.')) {
+                localStorage.removeItem('gtd_tasks');
+                
+                // Очищаем все списки
+                document.getElementById('inbox').innerHTML = '';
+                document.getElementById('inProgress').innerHTML = '';
+                document.getElementById('completed').innerHTML = '';
+                
+                updateTaskCounters();
+                showNotification('Все задачи удалены', 'info');
+            }
+        });
+        
+        // Поиск задач
+        searchInput.addEventListener('input', () => {
+            filters.search = searchInput.value.toLowerCase();
+            applyFilters();
+        });
+        
+        // Применение фильтров
+        function applyFilters() {
+            const tasks = document.querySelectorAll('.task-item');
+            
+            tasks.forEach(task => {
+                const title = task.querySelector('.task-title').textContent.toLowerCase();
+                const description = task.querySelector('.task-description')?.textContent.toLowerCase() || '';
+                const tags = Array.from(task.querySelectorAll('.task-tag')).map(tag => tag.textContent.toLowerCase());
+                
+                const matchesSearch = title.includes(filters.search) || 
+                                     description.includes(filters.search) ||
+                                     tags.some(tag => tag.includes(filters.search));
+                
+                if (matchesSearch) {
+                    task.style.display = 'block';
+                } else {
+                    task.style.display = 'none';
+                }
+            });
         }
     </script>
 </body>
