@@ -1,22 +1,83 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTD System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>GTD System | Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
-        <!-- [Остальное содержимое без изменений] -->
+        <header>
+            <h1>GTD System</h1>
+            <nav>
+                <ul>
+                    <li class="active"><a href="index.html">Dashboard</a></li>
+                    <li><a href="projects.html">Projects</a></li>
+                    <li><a href="tasks.html">Tasks</a></li>
+                    <li><a href="today.html">Today</a></li>
+                    <li><a href="upcoming.html">Upcoming</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section class="quick-add">
+                <h2>Quick Add Task</h2>
+                <form id="quick-add-form">
+                    <input type="text" id="quick-task-input" placeholder="What needs to be done?" required>
+                    <button type="submit">Add Task</button>
+                </form>
+            </section>
+
+            <section class="stats">
+                <div class="stat-card">
+                    <h3>Today</h3>
+                    <p id="today-count">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Upcoming</h3>
+                    <p id="upcoming-count">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Projects</h3>
+                    <p id="projects-count">0</p>
+                </div>
+            </section>
+
+            <section class="recent-tasks">
+                <h2>Recent Tasks</h2>
+                <ul id="recent-tasks-list">
+                    <!-- Tasks will be added here dynamically -->
+                </ul>
+            </section>
+        </main>
     </div>
 
-    <!-- Модальные окна (без изменений) -->
-
-    <!-- Подключаем JavaScript -->
-    <script src="js/tasks.js"></script>
-    <script src="js/projects.js"></script>
+    <script src="js/storage.js"></script>
     <script src="js/app.js"></script>
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDashboardStats();
+            loadRecentTasks();
+            
+            // Quick add form
+            document.getElementById('quick-add-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const input = document.getElementById('quick-task-input');
+                addTask({
+                    title: input.value,
+                    dueDate: null,
+                    project: 'Inbox',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                });
+                input.value = '';
+                updateDashboardStats();
+                loadRecentTasks();
+            });
+        });
+    </script>
 </body>
 </html>
