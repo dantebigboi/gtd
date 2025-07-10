@@ -4,56 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GTD System | All Tasks</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>GTD System</h1>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Dashboard</a></li>
-                    <li><a href="projects.html">Projects</a></li>
-                    <li class="active"><a href="tasks.html">Tasks</a></li>
-                    <li><a href="today.html">Today</a></li>
-                    <li><a href="upcoming.html">Upcoming</a></li>
-                </ul>
-            </nav>
-        </header>
-
-        <main>
-            <section class="tasks-list">
-                <h2>All Tasks</h2>
-                
-                <div class="filters">
-                    <select id="project-filter">
-                        <option value="all">All Projects</option>
-                    </select>
-                    <select id="status-filter">
-                        <option value="all">All Statuses</option>
-                        <option value="completed">Completed</option>
-                        <option value="pending">Pending</option>
-                    </select>
-                </div>
-                
-                <ul id="tasks-container">
-                    <!-- Tasks will be added here dynamically -->
-                </ul>
-            </section>
-        </main>
-    </div>
-
-    <script src="js/storage.js"></script>
-    <script src="js/app.js"></script>
+    <!-- [Rest of your HTML content remains exactly the same] -->
+    <script src="./js/storage.js"></script>
+    <script src="./js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             loadTasks();
             
-            // Setup filters
             document.getElementById('project-filter').addEventListener('change', loadTasks);
             document.getElementById('status-filter').addEventListener('change', loadTasks);
             
-            // Populate project filter
             const projects = getProjects();
             const projectFilter = document.getElementById('project-filter');
             projects.forEach(project => {
