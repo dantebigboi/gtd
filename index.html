@@ -1237,3 +1237,264 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="ru">
+<!-- [Остальная часть HTML остается такой же, пока не дойдем до JavaScript] -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Инициализация календарей
+        flatpickr('.datepicker', {
+            enableTime: true,
+            dateFormat: "d.m.Y H:i",
+            time_24hr: true,
+            locale: "ru",
+            minDate: "today"
+        });
+
+        // Элементы DOM
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const addChecklistItemBtn = document.getElementById('addChecklistItem');
+        const checklistItemsContainer = document.getElementById('checklistItems');
+        const inboxList = document.getElementById('inbox');
+        
+        // Счетчик для генерации ID
+        let taskId = 1;
+        let checklistItemId = 1;
+
+        // Добавление пункта чек-листа
+        addChecklistItemBtn.addEventListener('click', () => {
+            const newItem = document.createElement('div');
+            newItem.className = 'checklist-item';
+            newItem.innerHTML = `
+                <input type="text" class="form-control checklist-input" placeholder="Добавьте пункт чек-листа">
+                <button type="button" class="task-btn remove-checklist-item">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            checklistItemsContainer.appendChild(newItem);
+            
+            // Добавляем обработчик для кнопки удаления
+            newItem.querySelector('.remove-checklist-item').addEventListener('click', () => {
+                newItem.remove();
+            });
+        });
+
+        // Добавление новой задачи
+        addTaskBtn.addEventListener('click', () => {
+            const title = document.getElementById('taskTitle').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+            const dueDate = document.getElementById('taskDueDate').value;
+            const priority = document.getElementById('taskPriority').value;
+            const tags = document.getElementById('taskTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            
+            // Получаем пункты чек-листа
+            const checklistItems = Array.from(document.querySelectorAll('.checklist-input'))
+                .map(input => input.value.trim())
+                .filter(item => item);
+            
+            if (!title) {
+                showNotification('Пожалуйста, введите название задачи', 'error');
+                return;
+            }
+            
+            // Создаем HTML для новой задачи
+            const taskHtml = createTaskHtml({
+                id: `task_${taskId++}`,
+                title,
+                description,
+                dueDate,
+                priority,
+                tags,
+                checklist: checklistItems
+            });
+            
+            // Добавляем задачу в колонку "Входящие"
+            inboxList.insertAdjacentHTML('afterbegin', taskHtml);
+            
+            // Обновляем счетчик задач
+            updateTaskCount('inbox');
+            
+            showNotification(`Задача "${title}" добавлена!`, 'success');
+            
+            // Очищаем форму
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDescription').value = '';
+            document.getElementById('taskDueDate').value = '';
+            document.getElementById('taskPriority').value = 'medium';
+            document.getElementById('taskTags').value = '';
+            
+            // Очищаем чек-лист, оставляя одно поле
+            checklistItemsContainer.innerHTML = `
+                <div class="checklist-item">
+                    <input type="text" class="form-control checklist-input" placeholder="Добавьте пункт чек-листа">
+                </div>
+            `;
+            
+            // Добавляем обработчики событий для новой задачи
+            addTaskEventListeners(document.querySelector(`#inbox .task-card:first-child`));
+        });
+
+        // Функция для создания HTML задачи
+        function createTaskHtml(task) {
+            const priorityClasses = {
+                low: 'priority-low',
+                medium: 'priority-medium',
+                high: 'priority-high'
+            };
+            
+            const priorityClass = priorityClasses[task.priority] || 'priority-medium';
+            
+            // Форматируем дату, если она есть
+            let dueDateHtml = '';
+            if (task.dueDate) {
+                dueDateHtml = `
+                    <div class="task-due">
+                        <i class="far fa-clock"></i>
+                        ${task.dueDate}
+                    </div>
+                `;
+            }
+            
+            // Создаем HTML для тегов
+            let tagsHtml = '';
+            if (task.tags && task.tags.length > 0) {
+                tagsHtml = `
+                    <div class="task-tags">
+                        ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+                    </div>
+                `;
+            }
+            
+            // Создаем HTML для чек-листа
+            let checklistHtml = '';
+            if (task.checklist && task.checklist.length > 0) {
+                checklistHtml = `
+                    <div class="task-checklist">
+                        ${task.checklist.map((item, index) => `
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_${task.id}_${index}">
+                                <label for="check_${task.id}_${index}">${item}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="task-card" id="${task.id}">
+                    <div class="task-card-header">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-priority ${priorityClass}"></div>
+                    </div>
+                    <div class="task-description">
+                        ${task.description || ''}
+                    </div>
+                    ${tagsHtml}
+                    ${checklistHtml}
+                    ${dueDateHtml}
+                    <div class="task-actions">
+                        <button class="task-btn edit-task">
+                            <i class="far fa-edit"></i>
+                        </button>
+                        <button class="task-btn delete-task">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                        <button class="task-btn complete-task">
+                            <i class="far fa-check-circle"></i> Завершить
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Функция для обновления счетчика задач
+        function updateTaskCount(columnId) {
+            const column = document.getElementById(columnId);
+            if (column) {
+                const taskCount = column.querySelectorAll('.task-card').length;
+                const countElement = column.closest('.task-column').querySelector('.task-count');
+                if (countElement) {
+                    countElement.textContent = taskCount;
+                }
+            }
+        }
+        
+        // Функция для добавления обработчиков событий к задаче
+        function addTaskEventListeners(taskElement) {
+            if (!taskElement) return;
+            
+            // Обработчик для кнопки удаления
+            taskElement.querySelector('.delete-task').addEventListener('click', function() {
+                if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                    taskElement.remove();
+                    updateTaskCount(taskElement.closest('.task-list').id);
+                    showNotification('Задача удалена', 'info');
+                }
+            });
+            
+            // Обработчик для кнопки завершения
+            taskElement.querySelector('.complete-task').addEventListener('click', function() {
+                taskElement.classList.add('completed');
+                const completedList = document.getElementById('completed');
+                if (completedList) {
+                    completedList.insertAdjacentHTML('afterbegin', taskElement.outerHTML);
+                    taskElement.remove();
+                    
+                    // Обновляем счетчики задач
+                    updateTaskCount('inbox');
+                    updateTaskCount('completed');
+                    
+                    // Добавляем обработчики для перемещенной задачи
+                    addTaskEventListeners(completedList.querySelector('.task-card:first-child'));
+                }
+                showNotification('Задача завершена! +10 XP', 'success');
+            });
+            
+            // Обработчик для кнопки редактирования
+            taskElement.querySelector('.edit-task').addEventListener('click', function() {
+                // Здесь можно добавить логику редактирования задачи
+                showNotification('Функция редактирования пока не реализована', 'warning');
+            });
+        }
+
+        // Показ уведомлений
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const messageEl = notification.querySelector('.notification-message');
+            
+            // Устанавливаем сообщение
+            messageEl.textContent = message;
+            
+            // Устанавливаем цвет в зависимости от типа
+            const colors = {
+                info: '#3498db',
+                success: '#10b981',
+                warning: '#f59e0b',
+                error: '#ef4444'
+            };
+            
+            notification.style.borderLeft = `4px solid ${colors[type]}`;
+            
+            // Показываем уведомление
+            notification.classList.add('show');
+            
+            // Автоматическое скрытие через 5 секунд
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Закрытие уведомления
+        document.querySelector('.notification-close').addEventListener('click', () => {
+            document.getElementById('notification').classList.remove('show');
+        });
+
+        // Добавляем обработчики событий для существующих задач при загрузке
+        document.querySelectorAll('.task-card').forEach(task => {
+            addTaskEventListeners(task);
+        });
+    });
+</script>
+</body>
+</html>
