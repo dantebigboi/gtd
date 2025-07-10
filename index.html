@@ -1,689 +1,1073 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTD | Современный органайзер</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css">
+    <title>GTD System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg: #121212;
-            --surface: #1e1e1e;
-            --primary: #bb86fc;
-            --secondary: #03dac6;
-            --text: #e1e1e1;
-            --text-muted: #a1a1a1;
-            --border: rgba(255,255,255,0.1);
-            --success: #4caf50;
-            --warning: #ff9800;
-            --error: #f44336;
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --accent-color: #6d8bff;
+            --secondary-color: #4a4a4a;
+            --hover-color: #3a3a3a;
+            --border-color: #444;
+            --completed-color: #555;
+            --priority-high: #ff5e5e;
+            --priority-medium: #ffb85e;
+            --priority-low: #5eb3ff;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            transition: all 0.3s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
-        /* Гладкий скролл */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Шапка */
-        header {
-            background: var(--surface);
-            padding: 1rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-        }
-
-        nav {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        nav a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.5rem 0;
-            border-bottom: 2px solid transparent;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        nav a:hover, nav a.active {
-            color: var(--primary);
-            border-color: var(--primary);
-        }
-
-        nav a i {
-            font-size: 1.1rem;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
-            max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        /* Вкладки */
-        .tab {
-            display: none;
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .active-tab {
-            display: block;
-        }
-
-        /* Карточки и поверхности */
-        .card {
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border: 1px solid var(--border);
-        }
-
-        /* Кнопки */
-        button, .btn {
-            background: var(--primary);
-            color: #121212;
-            border: none;
-            padding: 0.7rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(187, 134, 252, 0.3);
-        }
-
-        button.secondary {
-            background: var(--secondary);
-            color: #121212;
-        }
-
-        button.outline {
-            background: transparent;
-            color: var(--primary);
-            border: 1px solid var(--primary);
-        }
-
-        /* Формы */
-        input, select, textarea {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.8rem 1rem;
-            color: var(--text);
-            width: 100%;
-            font-size: 1rem;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.2);
-        }
-
-        /* Задачи GTD */
-        .columns {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .column h2 {
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .tasks {
-            min-height: 100px;
-            margin: 1rem 0;
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-
-        .task {
-            background: rgba(255,255,255,0.03);
-            border-radius: 8px;
-            padding: 1rem;
-            border-left: 3px solid var(--primary);
-            cursor: grab;
-            position: relative;
-        }
-
-        .task:hover {
-            background: rgba(255,255,255,0.06);
-            transform: translateX(4px);
-        }
-
-        .task-actions {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .task:hover .task-actions {
-            opacity: 1;
-        }
-
-        .task-actions button {
-            background: none;
-            color: var(--text-muted);
-            padding: 0.3rem;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .task-actions button:hover {
-            background: rgba(255,255,255,0.1);
-            color: var(--text);
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Чек-листы */
-        .checklist-item {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 0.8rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .checklist-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
-        }
-
-        /* Бюджет */
-        .expense-item {
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        /* Анимации */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
         }
 
-        .pulse {
-            animation: pulse 2s infinite;
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* Адаптивность */
+        .logo i {
+            color: var(--accent-color);
+        }
+
+        .view-switcher {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .view-btn {
+            background-color: var(--secondary-color);
+            border: none;
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .view-btn.active {
+            background-color: var(--accent-color);
+        }
+
+        .view-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-list {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            padding: 8px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .sidebar-item.active {
+            background-color: var(--accent-color);
+        }
+
+        .sidebar-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .count {
+            margin-left: auto;
+            background-color: var(--secondary-color);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .content-area {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .content-title {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .add-btn {
+            background-color: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .add-btn:hover {
+            background-color: #5a7eff;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            background-color: var(--secondary-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: transform 0.2s;
+        }
+
+        .task-item:hover {
+            transform: translateX(5px);
+        }
+
+        .task-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .task-checkbox:checked {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            position: relative;
+        }
+
+        .task-checkbox:checked::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+        }
+
+        .task-content {
+            flex-grow: 1;
+        }
+
+        .task-title {
+            font-size: 16px;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .task-completed .task-title {
+            text-decoration: line-through;
+            color: var(--completed-color);
+        }
+
+        .task-details {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .task-detail {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .task-priority {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .priority-high {
+            background-color: var(--priority-high);
+        }
+
+        .priority-medium {
+            background-color: var(--priority-medium);
+        }
+
+        .priority-low {
+            background-color: var(--priority-low);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .task-action {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .task-action:hover {
+            color: var(--text-color);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-color);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 15px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: #aaa;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+        }
+
+        .empty-state p {
+            margin-top: 10px;
+        }
+
         @media (max-width: 768px) {
-            .columns {
+            .main-content {
                 grid-template-columns: 1fr;
             }
-            
-            nav {
-                gap: 1rem;
-                justify-content: center;
+
+            .sidebar {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="#" onclick="showTab('tasks')" class="active">
-                <i class="fas fa-tasks"></i> Задачи
-            </a>
-            <a href="#" onclick="showTab('checklists')">
-                <i class="fas fa-check-circle"></i> Чек-листы
-            </a>
-            <a href="#" onclick="showTab('budget')">
-                <i class="fas fa-wallet"></i> Бюджет
-            </a>
-        </nav>
-    </header>
-
     <div class="container">
-        <!-- Вкладка задач -->
-        <div id="tasks" class="tab active-tab">
-            <div class="card">
-                <div class="controls">
-                    <input type="text" id="search" placeholder="Поиск задач...">
-                    <button id="clear-done" class="outline">
-                        <i class="fas fa-trash"></i> Очистить выполненные
+        <header>
+            <div class="logo">
+                <i class="fas fa-check-circle"></i>
+                <h1>GTD System</h1>
+            </div>
+            <div class="view-switcher">
+                <button class="view-btn active" data-view="inbox">Inbox</button>
+                <button class="view-btn" data-view="today">Today</button>
+                <button class="view-btn" data-view="upcoming">Upcoming</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title"><i class="fas fa-inbox"></i> Tasks</h3>
+                    <ul class="sidebar-list">
+                        <li class="sidebar-item active" data-filter="inbox">
+                            <i class="fas fa-inbox"></i> Inbox <span class="count" id="inbox-count">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="today">
+                            <i class="fas fa-calendar-day"></i> Today <span class="count" id="today-count">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="upcoming">
+                            <i class="fas fa-calendar-week"></i> Upcoming <span class="count" id="upcoming-count">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="scheduled">
+                            <i class="fas fa-calendar-alt"></i> Scheduled <span class="count" id="scheduled-count">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="someday">
+                            <i class="fas fa-calendar-plus"></i> Someday <span class="count" id="someday-count">0</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title"><i class="fas fa-tags"></i> Projects</h3>
+                    <ul class="sidebar-list" id="projects-list">
+                        <!-- Projects will be added here dynamically -->
+                    </ul>
+                    <button class="add-btn" id="add-project-btn" style="width: 100%; margin-top: 10px;">
+                        <i class="fas fa-plus"></i> Add Project
                     </button>
                 </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title"><i class="fas fa-filter"></i> Filters</h3>
+                    <ul class="sidebar-list">
+                        <li class="sidebar-item" data-filter="completed">
+                            <i class="fas fa-check-circle"></i> Completed
+                        </li>
+                        <li class="sidebar-item" data-filter="high">
+                            <i class="fas fa-flag"></i> High Priority
+                        </li>
+                        <li class="sidebar-item" data-filter="medium">
+                            <i class="fas fa-flag"></i> Medium Priority
+                        </li>
+                        <li class="sidebar-item" data-filter="low">
+                            <i class="fas fa-flag"></i> Low Priority
+                        </li>
+                    </ul>
+                </div>
             </div>
 
-            <div class="columns" id="columns">
-                <div class="card column" id="inbox">
-                    <h2><i class="fas fa-inbox"></i> Входящие</h2>
-                    <div class="tasks" id="inbox-tasks"></div>
-                    <input type="text" class="new-task-input" placeholder="+ Новая задача (Enter)">
-                </div>
-                
-                <div class="card column" id="in-progress">
-                    <h2><i class="fas fa-cogs"></i> В работе</h2>
-                    <div class="tasks" id="in-progress-tasks"></div>
-                </div>
-                
-                <div class="card column" id="done">
-                    <h2><i class="fas fa-check"></i> Выполнено</h2>
-                    <div class="tasks" id="done-tasks"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Вкладка чек-листов -->
-        <div id="checklists" class="tab">
-            <div class="card">
-                <div class="checklist-form">
-                    <input type="text" id="checklist-name" placeholder="Название чек-листа">
-                    <button onclick="addChecklist()" class="secondary">
-                        <i class="fas fa-plus"></i> Создать
+            <div class="content-area">
+                <div class="content-header">
+                    <h2 class="content-title" id="content-title">Inbox</h2>
+                    <button class="add-btn" id="add-task-btn">
+                        <i class="fas fa-plus"></i> Add Task
                     </button>
                 </div>
-            </div>
 
-            <div class="card" id="checklists-container" style="margin-top: 1.5rem;">
-                <h2><i class="fas fa-list"></i> Мои чек-листы</h2>
-                <div id="checklists-list"></div>
-            </div>
-        </div>
-
-        <!-- Вкладка бюджета -->
-        <div id="budget" class="tab">
-            <div class="card">
-                <div class="budget-form">
-                    <input type="text" id="expense-name" placeholder="На что потратили?">
-                    <input type="number" id="expense-amount" placeholder="Сумма (₽)" style="margin: 1rem 0;">
-                    <button onclick="addExpense()">
-                        <i class="fas fa-save"></i> Добавить расход
-                    </button>
-                </div>
-            </div>
-
-            <div class="card" style="margin-top: 1.5rem;">
-                <h2><i class="fas fa-history"></i> История расходов</h2>
-                <div class="expense-list" id="expense-list"></div>
+                <ul class="task-list" id="task-list">
+                    <!-- Tasks will be added here dynamically -->
+                    <div class="empty-state">
+                        <i class="fas fa-tasks"></i>
+                        <h3>No tasks found</h3>
+                        <p>Add a new task to get started</p>
+                    </div>
+                </ul>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
+    <!-- Add Task Modal -->
+    <div class="modal" id="task-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Task</h3>
+                <button class="close-btn" id="close-task-modal">&times;</button>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="form-group">
+                    <label for="task-title" class="form-label">Title*</label>
+                    <input type="text" id="task-title" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-notes" class="form-label">Notes</label>
+                    <textarea id="task-notes" class="form-input form-textarea"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-project" class="form-label">Project</label>
+                    <select id="task-project" class="form-input form-select">
+                        <option value="">No Project</option>
+                        <!-- Projects will be added here dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-due-date" class="form-label">Due Date</label>
+                    <input type="date" id="task-due-date" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="task-priority" class="form-label">Priority</label>
+                    <select id="task-priority" class="form-input form-select">
+                        <option value="none">None</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-task">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div class="modal" id="project-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Project</h3>
+                <button class="close-btn" id="close-project-modal">&times;</button>
+            </div>
+            <form id="project-form">
+                <div class="form-group">
+                    <label for="project-name" class="form-label">Project Name*</label>
+                    <input type="text" id="project-name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-color" class="form-label">Color</label>
+                    <select id="project-color" class="form-input form-select">
+                        <option value="#6d8bff">Blue</option>
+                        <option value="#ff6d6d">Red</option>
+                        <option value="#6dff7d">Green</option>
+                        <option value="#ffdb6d">Yellow</option>
+                        <option value="#d16dff">Purple</option>
+                        <option value="#ff8d6d">Orange</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-project">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // ===== Общие функции =====
-        function showTab(tabId) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active-tab'));
-            document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active-tab');
-            document.querySelector(`nav a[onclick="showTab('${tabId}')"]`).classList.add('active');
-            
-            // Плавный скролл вверх
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // ===== GTD: Задачи =====
+        // Data structure
         let tasks = JSON.parse(localStorage.getItem('gtd-tasks')) || [];
-        
-        // Drag & Drop
-        dragula([
-            document.getElementById('inbox-tasks'),
-            document.getElementById('in-progress-tasks'),
-            document.getElementById('done-tasks')
-        ]).on('drop', (el, target) => {
-            const taskId = el.dataset.id;
-            const newStatus = target.parentElement.id;
-            updateTaskStatus(taskId, newStatus);
-        });
+        let projects = JSON.parse(localStorage.getItem('gtd-projects')) || [];
+        let currentFilter = 'inbox';
+        let currentView = 'inbox';
+        let editingTaskId = null;
 
-        // Добавление задачи
-        document.querySelector('.new-task-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && e.target.value.trim()) {
-                tasks.push({
-                    id: Date.now().toString(),
-                    text: e.target.value.trim(),
-                    status: 'inbox',
-                    createdAt: new Date().toISOString()
-                });
-                saveTasks();
-                renderTasks();
-                e.target.value = '';
-                
-                // Анимация добавления
-                const newTask = document.querySelector(`.task[data-id="${tasks[tasks.length-1].id}"]`);
-                newTask.style.animation = 'fadeIn 0.5s ease';
-            }
-        });
+        // DOM Elements
+        const taskList = document.getElementById('task-list');
+        const projectsList = document.getElementById('projects-list');
+        const contentTitle = document.getElementById('content-title');
+        const inboxCount = document.getElementById('inbox-count');
+        const todayCount = document.getElementById('today-count');
+        const upcomingCount = document.getElementById('upcoming-count');
+        const scheduledCount = document.getElementById('scheduled-count');
+        const somedayCount = document.getElementById('someday-count');
 
-        // Рендер задач
-        function renderTasks() {
-            const columns = {
-                'inbox': document.getElementById('inbox-tasks'),
-                'in-progress': document.getElementById('in-progress-tasks'),
-                'done': document.getElementById('done-tasks')
-            };
+        // Modals
+        const taskModal = document.getElementById('task-modal');
+        const projectModal = document.getElementById('project-modal');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const addProjectBtn = document.getElementById('add-project-btn');
+        const closeTaskModal = document.getElementById('close-task-modal');
+        const closeProjectModal = document.getElementById('close-project-modal');
+        const cancelTask = document.getElementById('cancel-task');
+        const cancelProject = document.getElementById('cancel-project');
 
-            Object.values(columns).forEach(col => col.innerHTML = '');
-            
-            tasks.forEach(task => {
-                const taskEl = document.createElement('div');
-                taskEl.className = 'task';
-                taskEl.dataset.id = task.id;
-                taskEl.innerHTML = `
-                    <div class="task-text">${task.text}</div>
-                    <div class="task-actions">
-                        <button onclick="editTask('${task.id}')"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteTask('${task.id}')"><i class="fas fa-trash"></i></button>
-                    </div>
-                `;
-                columns[task.status].appendChild(taskEl);
-            });
-        }
+        // Forms
+        const taskForm = document.getElementById('task-form');
+        const projectForm = document.getElementById('project-form');
+        const taskProjectSelect = document.getElementById('task-project');
 
-        function saveTasks() {
-            localStorage.setItem('gtd-tasks', JSON.stringify(tasks));
-        }
+        // View switcher
+        const viewSwitcher = document.querySelectorAll('.view-btn');
 
-        function deleteTask(id) {
-            tasks = tasks.filter(task => task.id !== id);
-            saveTasks();
+        // Initialize the app
+        function init() {
             renderTasks();
+            renderProjects();
+            updateCounts();
+            setupEventListeners();
         }
 
-        function editTask(id) {
-            const task = tasks.find(t => t.id === id);
-            const newText = prompt('Редактировать задачу:', task.text);
-            if (newText !== null) {
-                task.text = newText.trim();
-                saveTasks();
-                renderTasks();
-            }
-        }
-
-        function updateTaskStatus(id, newStatus) {
-            const task = tasks.find(t => t.id === id);
-            if (task) {
-                task.status = newStatus;
-                saveTasks();
-            }
-        }
-
-        // ===== Чек-листы =====
-        let checklists = JSON.parse(localStorage.getItem('gtd-checklists')) || [];
-
-        function renderChecklists() {
-            const container = document.getElementById('checklists-list');
-            container.innerHTML = '';
-            
-            if (checklists.length === 0) {
-                container.innerHTML = `
-                    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
-                        <i class="fas fa-clipboard-list" style="font-size: 3rem; opacity: 0.5; margin-bottom: 1rem;"></i>
-                        <p>У вас пока нет чек-листов</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            checklists.forEach(checklist => {
-                const checklistEl = document.createElement('div');
-                checklistEl.className = 'checklist';
-                checklistEl.style.marginBottom = '2rem';
-                checklistEl.innerHTML = `
-                    <h3 style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                        <span>${checklist.name}</span>
-                        <button onclick="removeChecklist('${checklist.id}')" class="outline" style="padding: 0.3rem 0.6rem;">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </h3>
-                    <ul id="checklist-${checklist.id}" style="list-style: none;"></ul>
-                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                        <input type="text" id="checklist-input-${checklist.id}" placeholder="Новый пункт" 
-                               style="flex-grow: 1;">
-                        <button onclick="addChecklistItem('${checklist.id}')" style="padding: 0.5rem 1rem;">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                `;
-                container.appendChild(checklistEl);
-
-                const itemsList = document.getElementById(`checklist-${checklist.id}`);
-                checklist.items.forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'checklist-item';
-                    li.innerHTML = `
-                        <input type="checkbox" ${item.done ? 'checked' : ''} 
-                               onchange="toggleChecklistItem('${checklist.id}', '${item.id}')">
-                        <span style="${item.done ? 'text-decoration: line-through; opacity: 0.7;' : ''}">${item.text}</span>
-                        <button onclick="removeChecklistItem('${checklist.id}', '${item.id}')" 
-                                style="margin-left: auto; background: none; border: none; color: var(--text-muted); cursor: pointer;">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    `;
-                    itemsList.appendChild(li);
+        // Set up event listeners
+        function setupEventListeners() {
+            // Sidebar filter clicks
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    currentFilter = item.dataset.filter;
+                    contentTitle.textContent = item.textContent.trim().replace(/\d+$/, '').trim();
+                    renderTasks();
                 });
+            });
+
+            // View switcher
+            viewSwitcher.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    viewSwitcher.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentView = btn.dataset.view;
+                    
+                    // Update the sidebar to match
+                    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                    const sidebarItem = document.querySelector(`.sidebar-item[data-filter="${currentView}"]`);
+                    if (sidebarItem) {
+                        sidebarItem.classList.add('active');
+                        currentFilter = currentView;
+                        contentTitle.textContent = sidebarItem.textContent.trim().replace(/\d+$/, '').trim();
+                    }
+                    
+                    renderTasks();
+                });
+            });
+
+            // Add task button
+            addTaskBtn.addEventListener('click', () => {
+                editingTaskId = null;
+                taskForm.reset();
+                document.getElementById('task-id').value = '';
+                populateProjectSelect();
+                taskModal.classList.add('active');
+            });
+
+            // Add project button
+            addProjectBtn.addEventListener('click', () => {
+                projectForm.reset();
+                projectModal.classList.add('active');
+            });
+
+            // Close modals
+            closeTaskModal.addEventListener('click', () => taskModal.classList.remove('active'));
+            closeProjectModal.addEventListener('click', () => projectModal.classList.remove('active'));
+            cancelTask.addEventListener('click', () => taskModal.classList.remove('active'));
+            cancelProject.addEventListener('click', () => projectModal.classList.remove('active'));
+
+            // Task form submission
+            taskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveTask();
+            });
+
+            // Project form submission
+            projectForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveProject();
             });
         }
 
-        function addChecklist() {
-            const name = document.getElementById('checklist-name').value.trim();
-            if (name) {
-                checklists.push({
-                    id: Date.now().toString(),
-                    name,
-                    items: []
-                });
-                saveChecklists();
-                renderChecklists();
-                document.getElementById('checklist-name').value = '';
+        // Render tasks based on current filter
+        function renderTasks() {
+            let filteredTasks = [];
+            
+            switch (currentFilter) {
+                case 'inbox':
+                    filteredTasks = tasks.filter(task => !task.project && !task.completed);
+                    break;
+                case 'today':
+                    const today = new Date().toISOString().split('T')[0];
+                    filteredTasks = tasks.filter(task => task.dueDate === today && !task.completed);
+                    break;
+                case 'upcoming':
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                    filteredTasks = tasks.filter(task => task.dueDate && task.dueDate >= tomorrowStr && !task.completed);
+                    break;
+                case 'scheduled':
+                    filteredTasks = tasks.filter(task => task.dueDate && !task.completed);
+                    break;
+                case 'someday':
+                    filteredTasks = tasks.filter(task => !task.dueDate && !task.completed);
+                    break;
+                case 'completed':
+                    filteredTasks = tasks.filter(task => task.completed);
+                    break;
+                case 'high':
+                    filteredTasks = tasks.filter(task => task.priority === 'high' && !task.completed);
+                    break;
+                case 'medium':
+                    filteredTasks = tasks.filter(task => task.priority === 'medium' && !task.completed);
+                    break;
+                case 'low':
+                    filteredTasks = tasks.filter(task => task.priority === 'low' && !task.completed);
+                    break;
+                default:
+                    // Filter by project
+                    if (currentFilter.startsWith('project-')) {
+                        const projectId = currentFilter.replace('project-', '');
+                        filteredTasks = tasks.filter(task => task.project === projectId && !task.completed);
+                    } else {
+                        filteredTasks = tasks.filter(task => !task.completed);
+                    }
+            }
+            
+            // Also consider current view
+            if (currentView === 'today') {
+                const today = new Date().toISOString().split('T')[0];
+                filteredTasks = filteredTasks.filter(task => task.dueDate === today);
+            } else if (currentView === 'upcoming') {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                filteredTasks = filteredTasks.filter(task => task.dueDate && task.dueDate >= tomorrowStr);
+            }
+
+            // Sort tasks: overdue first, then by due date, then by priority
+            filteredTasks.sort((a, b) => {
+                // Completed tasks go to the bottom
+                if (a.completed && !b.completed) return 1;
+                if (!a.completed && b.completed) return -1;
                 
-                // Прокрутка к новому чек-листу
-                setTimeout(() => {
-                    document.getElementById('checklists-list').lastChild.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                }, 300);
-            }
-        }
-
-        function addChecklistItem(checklistId) {
-            const input = document.getElementById(`checklist-input-${checklistId}`);
-            const text = input.value.trim();
-            
-            if (text) {
-                const checklist = checklists.find(c => c.id === checklistId);
-                if (checklist) {
-                    checklist.items.push({
-                        id: Date.now().toString(),
-                        text,
-                        done: false
-                    });
-                    saveChecklists();
-                    renderChecklists();
-                    input.value = '';
+                // Overdue tasks come first
+                const today = new Date().toISOString().split('T')[0];
+                if (a.dueDate && a.dueDate < today && !a.completed) {
+                    if (!b.dueDate || b.dueDate >= today || b.completed) return -1;
+                    return a.dueDate.localeCompare(b.dueDate);
                 }
-            }
-        }
+                if (b.dueDate && b.dueDate < today && !b.completed) return 1;
+                
+                // Then by due date
+                if (a.dueDate && b.dueDate) {
+                    return a.dueDate.localeCompare(b.dueDate);
+                }
+                if (a.dueDate) return -1;
+                if (b.dueDate) return 1;
+                
+                // Then by priority (high > medium > low > none)
+                const priorityOrder = { high: 3, medium: 2, low: 1, none: 0 };
+                return priorityOrder[b.priority] - priorityOrder[a.priority];
+            });
 
-        function toggleChecklistItem(checklistId, itemId) {
-            const checklist = checklists.find(c => c.id === checklistId);
-            if (checklist) {
-                const item = checklist.items.find(i => i.id === itemId);
-                if (item) item.done = !item.done;
-                saveChecklists();
-            }
-        }
+            // Clear the task list
+            taskList.innerHTML = '';
 
-        function removeChecklistItem(checklistId, itemId) {
-            const checklist = checklists.find(c => c.id === checklistId);
-            if (checklist) {
-                checklist.items = checklist.items.filter(i => i.id !== itemId);
-                saveChecklists();
-                renderChecklists();
-            }
-        }
-
-        function removeChecklist(checklistId) {
-            if (confirm('Удалить этот чек-лист?')) {
-                checklists = checklists.filter(c => c.id !== checklistId);
-                saveChecklists();
-                renderChecklists();
-            }
-        }
-
-        function saveChecklists() {
-            localStorage.setItem('gtd-checklists', JSON.stringify(checklists));
-        }
-
-        // ===== Бюджет =====
-        let expenses = JSON.parse(localStorage.getItem('gtd-expenses')) || [];
-
-        function renderExpenses() {
-            const list = document.getElementById('expense-list');
-            list.innerHTML = '';
-            
-            if (expenses.length === 0) {
-                list.innerHTML = `
-                    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
-                        <i class="fas fa-coins" style="font-size: 3rem; opacity: 0.5; margin-bottom: 1rem;"></i>
-                        <p>Здесь будут ваши расходы</p>
+            // Add tasks to the list
+            if (filteredTasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-tasks"></i>
+                        <h3>No tasks found</h3>
+                        <p>Add a new task to get started</p>
                     </div>
                 `;
-                return;
-            }
-            
-            let total = 0;
-            
-            expenses.forEach(exp => {
-                total += exp.amount;
-                const item = document.createElement('div');
-                item.className = 'expense-item';
-                item.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="width: 40px; height: 40px; background: rgba(187, 134, 252, 0.1); 
-                             border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-receipt" style="color: var(--primary);"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 500;">${exp.name}</div>
-                            <div style="font-size: 0.9rem; color: var(--text-muted);">
-                                ${new Date(exp.date).toLocaleDateString()}
+            } else {
+                filteredTasks.forEach(task => {
+                    const taskItem = document.createElement('li');
+                    taskItem.className = `task-item ${task.completed ? 'task-completed' : ''}`;
+                    
+                    const project = projects.find(p => p.id === task.project);
+                    const projectColor = project ? project.color : '';
+                    
+                    taskItem.innerHTML = `
+                        <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}">
+                        <div class="task-content">
+                            <h4 class="task-title">${task.title}</h4>
+                            <div class="task-details">
+                                ${project ? `<div class="task-detail" style="color: ${projectColor}"><i class="fas fa-tag"></i> ${project.name}</div>` : ''}
+                                ${task.dueDate ? `<div class="task-detail"><i class="far fa-calendar-alt"></i> ${formatDate(task.dueDate)}</div>` : ''}
+                                ${task.priority !== 'none' ? `<div class="task-detail"><span class="task-priority priority-${task.priority}"></span> ${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}</div>` : ''}
                             </div>
                         </div>
-                    </div>
-                    <div style="font-weight: 600; color: var(--error);">-${exp.amount} ₽</div>
-                    <button onclick="removeExpense('${exp.id}')" style="background: none; border: none; 
-                            color: var(--text-muted); cursor: pointer;">
-                        <i class="fas fa-times"></i>
-                    </button>
+                        <div class="task-actions">
+                            <button class="task-action edit-task" data-id="${task.id}"><i class="fas fa-edit"></i></button>
+                            <button class="task-action delete-task" data-id="${task.id}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    
+                    taskList.appendChild(taskItem);
+                });
+
+                // Add event listeners to checkboxes
+                document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const taskId = e.target.dataset.id;
+                        toggleTaskComplete(taskId);
+                    });
+                });
+
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-task').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const taskId = e.target.closest('button').dataset.id;
+                        editTask(taskId);
+                    });
+                });
+
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-task').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const taskId = e.target.closest('button').dataset.id;
+                        deleteTask(taskId);
+                    });
+                });
+            }
+        }
+
+        // Render projects in the sidebar
+        function renderProjects() {
+            projectsList.innerHTML = '';
+            
+            projects.forEach(project => {
+                const projectItem = document.createElement('li');
+                projectItem.className = 'sidebar-item';
+                projectItem.dataset.filter = `project-${project.id}`;
+                projectItem.innerHTML = `
+                    <i class="fas fa-tag" style="color: ${project.color}"></i> ${project.name}
+                    <span class="count">${tasks.filter(t => t.project === project.id && !t.completed).length}</span>
                 `;
-                list.appendChild(item);
+                projectsList.appendChild(projectItem);
             });
             
-            // Итоговая сумма
-            const totalEl = document.createElement('div');
-            totalEl.style.padding = '1rem';
-            totalEl.style.borderTop = '1px solid var(--border)';
-            totalEl.style.display = 'flex';
-            totalEl.style.justifyContent = 'space-between';
-            totalEl.style.fontWeight = '600';
-            totalEl.innerHTML = `
-                <span>Всего:</span>
-                <span style="color: var(--error);">-${total.toFixed(2)} ₽</span>
-            `;
-            list.appendChild(totalEl);
-        }
-
-        function addExpense() {
-            const name = document.getElementById('expense-name').value.trim();
-            const amount = parseFloat(document.getElementById('expense-amount').value);
-            
-            if (name && amount > 0) {
-                expenses.push({
-                    id: Date.now().toString(),
-                    name,
-                    amount,
-                    date: new Date().toISOString()
+            // Add event listeners to project items
+            document.querySelectorAll('#projects-list .sidebar-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    currentFilter = item.dataset.filter;
+                    
+                    const project = projects.find(p => `project-${p.id}` === currentFilter);
+                    if (project) {
+                        contentTitle.textContent = project.name;
+                    }
+                    
+                    renderTasks();
                 });
-                saveExpenses();
-                renderExpenses();
-                document.getElementById('expense-name').value = '';
-                document.getElementById('expense-amount').value = '';
-                
-                // Анимация
-                const expenseList = document.getElementById('expense-list');
-                expenseList.style.animation = 'none';
-                void expenseList.offsetWidth; // Trigger reflow
-                expenseList.style.animation = 'fadeIn 0.5s ease';
+            });
+            
+            // Populate project select in task form
+            populateProjectSelect();
+        }
+
+        // Populate project select dropdown
+        function populateProjectSelect() {
+            taskProjectSelect.innerHTML = '<option value="">No Project</option>';
+            
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project.id;
+                option.textContent = project.name;
+                taskProjectSelect.appendChild(option);
+            });
+        }
+
+        // Save a new or updated task
+        function saveTask() {
+            const taskId = document.getElementById('task-id').value;
+            const title = document.getElementById('task-title').value.trim();
+            const notes = document.getElementById('task-notes').value.trim();
+            const project = document.getElementById('task-project').value;
+            const dueDate = document.getElementById('task-due-date').value;
+            const priority = document.getElementById('task-priority').value;
+            
+            if (!title) return;
+            
+            if (taskId) {
+                // Update existing task
+                const taskIndex = tasks.findIndex(t => t.id === taskId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex] = {
+                        ...tasks[taskIndex],
+                        title,
+                        notes,
+                        project: project || null,
+                        dueDate: dueDate || null,
+                        priority: priority || 'none'
+                    };
+                }
             } else {
-                alert('Пожалуйста, заполните все поля корректно!');
+                // Create new task
+                const newTask = {
+                    id: generateId(),
+                    title,
+                    notes,
+                    project: project || null,
+                    dueDate: dueDate || null,
+                    priority: priority || 'none',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+                tasks.push(newTask);
             }
-        }
-
-        function removeExpense(id) {
-            if (confirm('Удалить эту запись?')) {
-                expenses = expenses.filter(exp => exp.id !== id);
-                saveExpenses();
-                renderExpenses();
-            }
-        }
-
-        function saveExpenses() {
-            localStorage.setItem('gtd-expenses', JSON.stringify(expenses));
-        }
-
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', () => {
+            
+            saveToLocalStorage();
+            taskModal.classList.remove('active');
             renderTasks();
-            renderChecklists();
-            renderExpenses();
-        });
+            renderProjects();
+            updateCounts();
+        }
+
+        // Edit an existing task
+        function editTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            editingTaskId = taskId;
+            document.getElementById('task-id').value = taskId;
+            document.getElementById('task-title').value = task.title;
+            document.getElementById('task-notes').value = task.notes || '';
+            document.getElementById('task-project').value = task.project || '';
+            document.getElementById('task-due-date').value = task.dueDate || '';
+            document.getElementById('task-priority').value = task.priority || 'none';
+            
+            populateProjectSelect();
+            taskModal.classList.add('active');
+        }
+
+        // Delete a task
+        function deleteTask(taskId) {
+            if (confirm('Are you sure you want to delete this task?')) {
+                tasks = tasks.filter(t => t.id !== taskId);
+                saveToLocalStorage();
+                renderTasks();
+                renderProjects();
+                updateCounts();
+            }
+        }
+
+        // Toggle task completion status
+        function toggleTaskComplete(taskId) {
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex !== -1) {
+                tasks[taskIndex].completed = !tasks[taskIndex].completed;
+                saveToLocalStorage();
+                renderTasks();
+                renderProjects();
+                updateCounts();
+            }
+        }
+
+        // Save a new project
+        function saveProject() {
+            const name = document.getElementById('project-name').value.trim();
+            const color = document.getElementById('project-color').value;
+            
+            if (!name) return;
+            
+            const newProject = {
+                id: generateId(),
+                name,
+                color
+            };
+            
+            projects.push(newProject);
+            saveToLocalStorage();
+            projectModal.classList.remove('active');
+            renderProjects();
+            updateCounts();
+        }
+
+        // Update task counts in the sidebar
+        function updateCounts() {
+            inboxCount.textContent = tasks.filter(t => !t.project && !t.completed).length;
+            todayCount.textContent = tasks.filter(t => {
+                const today = new Date().toISOString().split('T')[0];
+                return t.dueDate === today && !t.completed;
+            }).length;
+            
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+            upcomingCount.textContent = tasks.filter(t => t.dueDate && t.dueDate >= tomorrowStr && !t.completed).length;
+            
+            scheduledCount.textContent = tasks.filter(t => t.dueDate && !t.completed).length;
+            somedayCount.textContent = tasks.filter(t => !t.dueDate && !t.completed).length;
+            
+            // Update project counts
+            document.querySelectorAll('#projects-list .sidebar-item').forEach(item => {
+                const projectId = item.dataset.filter.replace('project-', '');
+                const count = tasks.filter(t => t.project === projectId && !t.completed).length;
+                item.querySelector('.count').textContent = count;
+            });
+        }
+
+        // Format date for display
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            // Check if date is today
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            }
+            
+            // Check if date is tomorrow
+            if (date.toDateString() === tomorrow.toDateString()) {
+                return 'Tomorrow';
+            }
+            
+            // Check if date is in the current year
+            if (date.getFullYear() === today.getFullYear()) {
+                return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            }
+            
+            // Otherwise, show full date
+            return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        // Generate a unique ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Save data to localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('gtd-tasks', JSON.stringify(tasks));
+            localStorage.setItem('gtd-projects', JSON.stringify(projects));
+        }
+
+        // Initialize the app
+        init();
     </script>
 </body>
 </html>
