@@ -3,64 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTD Система</title>
+    <title>GTD | Современный органайзер</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Общие стили */
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
-        header { background: #2c3e50; color: white; padding: 1rem; text-align: center; }
-        nav a { color: white; margin: 0 10px; text-decoration: none; cursor: pointer; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-        .tab { display: none; }
-        .active-tab { display: block; }
+        :root {
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --primary: #bb86fc;
+            --secondary: #03dac6;
+            --text: #e1e1e1;
+            --text-muted: #a1a1a1;
+            --border: rgba(255,255,255,0.1);
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+        }
 
-        /* Стили для задач (GTD) */
-        .columns { display: flex; gap: 20px; flex-wrap: wrap; }
-        .column { flex: 1; min-width: 250px; background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tasks { min-height: 100px; margin: 10px 0; }
-        .task { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 8px; cursor: move; }
-        .task-actions button { background: none; border: none; cursor: pointer; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
 
-        /* Стили для бюджета */
-        .expense-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
 
-        /* Стили для чек-листов */
-        .checklist { margin-bottom: 20px; }
-        .checklist-item { display: flex; align-items: center; margin: 5px 0; }
+        /* Гладкий скролл */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Шапка */
+        header {
+            background: var(--surface);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 0;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        nav a i {
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Вкладки */
+        .tab {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .active-tab {
+            display: block;
+        }
+
+        /* Карточки и поверхности */
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        /* Кнопки */
+        button, .btn {
+            background: var(--primary);
+            color: #121212;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(187, 134, 252, 0.3);
+        }
+
+        button.secondary {
+            background: var(--secondary);
+            color: #121212;
+        }
+
+        button.outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        /* Формы */
+        input, select, textarea {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            color: var(--text);
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.2);
+        }
+
+        /* Задачи GTD */
+        .columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .column h2 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tasks {
+            min-height: 100px;
+            margin: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .task {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 3px solid var(--primary);
+            cursor: grab;
+            position: relative;
+        }
+
+        .task:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateX(4px);
+        }
+
+        .task-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .task:hover .task-actions {
+            opacity: 1;
+        }
+
+        .task-actions button {
+            background: none;
+            color: var(--text-muted);
+            padding: 0.3rem;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-actions button:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--text);
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Чек-листы */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        /* Бюджет */
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Анимации */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
 
         /* Адаптивность */
-        @media (max-width: 768px) { .columns { flex-direction: column; } }
+        @media (max-width: 768px) {
+            .columns {
+                grid-template-columns: 1fr;
+            }
+            
+            nav {
+                gap: 1rem;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>GTD Система</h1>
         <nav>
-            <a onclick="showTab('tasks')">Задачи</a>
-            <a onclick="showTab('checklists')">Чек-листы</a>
-            <a onclick="showTab('budget')">Бюджет</a>
+            <a href="#" onclick="showTab('tasks')" class="active">
+                <i class="fas fa-tasks"></i> Задачи
+            </a>
+            <a href="#" onclick="showTab('checklists')">
+                <i class="fas fa-check-circle"></i> Чек-листы
+            </a>
+            <a href="#" onclick="showTab('budget')">
+                <i class="fas fa-wallet"></i> Бюджет
+            </a>
         </nav>
     </header>
 
     <div class="container">
         <!-- Вкладка задач -->
         <div id="tasks" class="tab active-tab">
-            <div class="controls">
-                <input type="text" id="search" placeholder="Поиск задач...">
-                <button id="clear-done">Очистить выполненные</button>
-            </div>
-            <div class="columns" id="columns">
-                <div class="column" id="inbox">
-                    <h2>📥 Входящие</h2>
-                    <div class="tasks" id="inbox-tasks"></div>
-                    <input type="text" class="new-task-input" placeholder="+ Новая задача">
+            <div class="card">
+                <div class="controls">
+                    <input type="text" id="search" placeholder="Поиск задач...">
+                    <button id="clear-done" class="outline">
+                        <i class="fas fa-trash"></i> Очистить выполненные
+                    </button>
                 </div>
-                <div class="column" id="in-progress">
-                    <h2>⚡ В работе</h2>
+            </div>
+
+            <div class="columns" id="columns">
+                <div class="card column" id="inbox">
+                    <h2><i class="fas fa-inbox"></i> Входящие</h2>
+                    <div class="tasks" id="inbox-tasks"></div>
+                    <input type="text" class="new-task-input" placeholder="+ Новая задача (Enter)">
+                </div>
+                
+                <div class="card column" id="in-progress">
+                    <h2><i class="fas fa-cogs"></i> В работе</h2>
                     <div class="tasks" id="in-progress-tasks"></div>
                 </div>
-                <div class="column" id="done">
-                    <h2>✅ Выполнено</h2>
+                
+                <div class="card column" id="done">
+                    <h2><i class="fas fa-check"></i> Выполнено</h2>
                     <div class="tasks" id="done-tasks"></div>
                 </div>
             </div>
@@ -68,39 +320,58 @@
 
         <!-- Вкладка чек-листов -->
         <div id="checklists" class="tab">
-            <div class="checklist-form">
-                <input type="text" id="checklist-name" placeholder="Название чек-листа">
-                <button onclick="addChecklist()">Создать</button>
+            <div class="card">
+                <div class="checklist-form">
+                    <input type="text" id="checklist-name" placeholder="Название чек-листа">
+                    <button onclick="addChecklist()" class="secondary">
+                        <i class="fas fa-plus"></i> Создать
+                    </button>
+                </div>
             </div>
-            <div class="checklists" id="checklists-container"></div>
+
+            <div class="card" id="checklists-container" style="margin-top: 1.5rem;">
+                <h2><i class="fas fa-list"></i> Мои чек-листы</h2>
+                <div id="checklists-list"></div>
+            </div>
         </div>
 
         <!-- Вкладка бюджета -->
         <div id="budget" class="tab">
-            <div class="budget-form">
-                <input type="text" id="expense-name" placeholder="Название">
-                <input type="number" id="expense-amount" placeholder="Сумма">
-                <button onclick="addExpense()">Добавить</button>
+            <div class="card">
+                <div class="budget-form">
+                    <input type="text" id="expense-name" placeholder="На что потратили?">
+                    <input type="number" id="expense-amount" placeholder="Сумма (₽)" style="margin: 1rem 0;">
+                    <button onclick="addExpense()">
+                        <i class="fas fa-save"></i> Добавить расход
+                    </button>
+                </div>
             </div>
-            <div class="expense-list" id="expense-list"></div>
+
+            <div class="card" style="margin-top: 1.5rem;">
+                <h2><i class="fas fa-history"></i> История расходов</h2>
+                <div class="expense-list" id="expense-list"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Подключаем Dragula для перетаскивания -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
-    
-    <!-- Основной скрипт -->
     <script>
         // ===== Общие функции =====
         function showTab(tabId) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active-tab'));
+            document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+            
             document.getElementById(tabId).classList.add('active-tab');
+            document.querySelector(`nav a[onclick="showTab('${tabId}')"]`).classList.add('active');
+            
+            // Плавный скролл вверх
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // ===== Логика задач (GTD) =====
+        // ===== GTD: Задачи =====
         let tasks = JSON.parse(localStorage.getItem('gtd-tasks')) || [];
         
-        // Инициализация Drag & Drop
+        // Drag & Drop
         dragula([
             document.getElementById('inbox-tasks'),
             document.getElementById('in-progress-tasks'),
@@ -116,13 +387,17 @@
             if (e.key === 'Enter' && e.target.value.trim()) {
                 tasks.push({
                     id: Date.now().toString(),
-                    text: e.target.value,
+                    text: e.target.value.trim(),
                     status: 'inbox',
                     createdAt: new Date().toISOString()
                 });
                 saveTasks();
                 renderTasks();
                 e.target.value = '';
+                
+                // Анимация добавления
+                const newTask = document.querySelector(`.task[data-id="${tasks[tasks.length-1].id}"]`);
+                newTask.style.animation = 'fadeIn 0.5s ease';
             }
         });
 
@@ -143,27 +418,24 @@
                 taskEl.innerHTML = `
                     <div class="task-text">${task.text}</div>
                     <div class="task-actions">
-                        <button onclick="editTask('${task.id}')">✏️</button>
-                        <button onclick="deleteTask('${task.id}')">🗑️</button>
+                        <button onclick="editTask('${task.id}')"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteTask('${task.id}')"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
                 columns[task.status].appendChild(taskEl);
             });
         }
 
-        // Сохранение задач
         function saveTasks() {
             localStorage.setItem('gtd-tasks', JSON.stringify(tasks));
         }
 
-        // Удаление задачи
         function deleteTask(id) {
             tasks = tasks.filter(task => task.id !== id);
             saveTasks();
             renderTasks();
         }
 
-        // Редактирование задачи
         function editTask(id) {
             const task = tasks.find(t => t.id === id);
             const newText = prompt('Редактировать задачу:', task.text);
@@ -174,7 +446,6 @@
             }
         }
 
-        // Обновление статуса при перетаскивании
         function updateTaskStatus(id, newStatus) {
             const task = tasks.find(t => t.id === id);
             if (task) {
@@ -183,20 +454,42 @@
             }
         }
 
-        // ===== Логика чек-листов =====
+        // ===== Чек-листы =====
         let checklists = JSON.parse(localStorage.getItem('gtd-checklists')) || [];
 
         function renderChecklists() {
-            const container = document.getElementById('checklists-container');
+            const container = document.getElementById('checklists-list');
             container.innerHTML = '';
+            
+            if (checklists.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                        <i class="fas fa-clipboard-list" style="font-size: 3rem; opacity: 0.5; margin-bottom: 1rem;"></i>
+                        <p>У вас пока нет чек-листов</p>
+                    </div>
+                `;
+                return;
+            }
             
             checklists.forEach(checklist => {
                 const checklistEl = document.createElement('div');
                 checklistEl.className = 'checklist';
+                checklistEl.style.marginBottom = '2rem';
                 checklistEl.innerHTML = `
-                    <h3>${checklist.name}</h3>
-                    <ul id="checklist-${checklist.id}"></ul>
-                    <input type="text" data-checklist-id="${checklist.id}" placeholder="+ Добавить пункт" onkeypress="if(event.key=='Enter') addChecklistItem('${checklist.id}', this)">
+                    <h3 style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${checklist.name}</span>
+                        <button onclick="removeChecklist('${checklist.id}')" class="outline" style="padding: 0.3rem 0.6rem;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </h3>
+                    <ul id="checklist-${checklist.id}" style="list-style: none;"></ul>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <input type="text" id="checklist-input-${checklist.id}" placeholder="Новый пункт" 
+                               style="flex-grow: 1;">
+                        <button onclick="addChecklistItem('${checklist.id}')" style="padding: 0.5rem 1rem;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                 `;
                 container.appendChild(checklistEl);
 
@@ -207,8 +500,11 @@
                     li.innerHTML = `
                         <input type="checkbox" ${item.done ? 'checked' : ''} 
                                onchange="toggleChecklistItem('${checklist.id}', '${item.id}')">
-                        <span>${item.text}</span>
-                        <button onclick="removeChecklistItem('${checklist.id}', '${item.id}')">🗑️</button>
+                        <span style="${item.done ? 'text-decoration: line-through; opacity: 0.7;' : ''}">${item.text}</span>
+                        <button onclick="removeChecklistItem('${checklist.id}', '${item.id}')" 
+                                style="margin-left: auto; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+                            <i class="fas fa-times"></i>
+                        </button>
                     `;
                     itemsList.appendChild(li);
                 });
@@ -216,7 +512,7 @@
         }
 
         function addChecklist() {
-            const name = document.getElementById('checklist-name').value;
+            const name = document.getElementById('checklist-name').value.trim();
             if (name) {
                 checklists.push({
                     id: Date.now().toString(),
@@ -226,21 +522,31 @@
                 saveChecklists();
                 renderChecklists();
                 document.getElementById('checklist-name').value = '';
+                
+                // Прокрутка к новому чек-листу
+                setTimeout(() => {
+                    document.getElementById('checklists-list').lastChild.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }, 300);
             }
         }
 
-        function addChecklistItem(checklistId, inputEl) {
-            if (inputEl.value.trim()) {
+        function addChecklistItem(checklistId) {
+            const input = document.getElementById(`checklist-input-${checklistId}`);
+            const text = input.value.trim();
+            
+            if (text) {
                 const checklist = checklists.find(c => c.id === checklistId);
                 if (checklist) {
                     checklist.items.push({
                         id: Date.now().toString(),
-                        text: inputEl.value.trim(),
+                        text,
                         done: false
                     });
                     saveChecklists();
                     renderChecklists();
-                    inputEl.value = '';
+                    input.value = '';
                 }
             }
         }
@@ -263,57 +569,116 @@
             }
         }
 
+        function removeChecklist(checklistId) {
+            if (confirm('Удалить этот чек-лист?')) {
+                checklists = checklists.filter(c => c.id !== checklistId);
+                saveChecklists();
+                renderChecklists();
+            }
+        }
+
         function saveChecklists() {
             localStorage.setItem('gtd-checklists', JSON.stringify(checklists));
         }
 
-        // ===== Логика бюджета =====
+        // ===== Бюджет =====
         let expenses = JSON.parse(localStorage.getItem('gtd-expenses')) || [];
 
         function renderExpenses() {
             const list = document.getElementById('expense-list');
             list.innerHTML = '';
             
+            if (expenses.length === 0) {
+                list.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                        <i class="fas fa-coins" style="font-size: 3rem; opacity: 0.5; margin-bottom: 1rem;"></i>
+                        <p>Здесь будут ваши расходы</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let total = 0;
+            
             expenses.forEach(exp => {
+                total += exp.amount;
                 const item = document.createElement('div');
                 item.className = 'expense-item';
                 item.innerHTML = `
-                    <span>${exp.name}</span>
-                    <span>${exp.amount} ₽</span>
-                    <button onclick="removeExpense('${exp.id}')">Удалить</button>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 40px; height: 40px; background: rgba(187, 134, 252, 0.1); 
+                             border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-receipt" style="color: var(--primary);"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 500;">${exp.name}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted);">
+                                ${new Date(exp.date).toLocaleDateString()}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-weight: 600; color: var(--error);">-${exp.amount} ₽</div>
+                    <button onclick="removeExpense('${exp.id}')" style="background: none; border: none; 
+                            color: var(--text-muted); cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
                 `;
                 list.appendChild(item);
             });
+            
+            // Итоговая сумма
+            const totalEl = document.createElement('div');
+            totalEl.style.padding = '1rem';
+            totalEl.style.borderTop = '1px solid var(--border)';
+            totalEl.style.display = 'flex';
+            totalEl.style.justifyContent = 'space-between';
+            totalEl.style.fontWeight = '600';
+            totalEl.innerHTML = `
+                <span>Всего:</span>
+                <span style="color: var(--error);">-${total.toFixed(2)} ₽</span>
+            `;
+            list.appendChild(totalEl);
         }
 
         function addExpense() {
-            const name = document.getElementById('expense-name').value;
+            const name = document.getElementById('expense-name').value.trim();
             const amount = parseFloat(document.getElementById('expense-amount').value);
             
-            if (name && amount) {
+            if (name && amount > 0) {
                 expenses.push({
                     id: Date.now().toString(),
                     name,
-                    amount
+                    amount,
+                    date: new Date().toISOString()
                 });
                 saveExpenses();
                 renderExpenses();
                 document.getElementById('expense-name').value = '';
                 document.getElementById('expense-amount').value = '';
+                
+                // Анимация
+                const expenseList = document.getElementById('expense-list');
+                expenseList.style.animation = 'none';
+                void expenseList.offsetWidth; // Trigger reflow
+                expenseList.style.animation = 'fadeIn 0.5s ease';
+            } else {
+                alert('Пожалуйста, заполните все поля корректно!');
             }
         }
 
         function removeExpense(id) {
-            expenses = expenses.filter(exp => exp.id !== id);
-            saveExpenses();
-            renderExpenses();
+            if (confirm('Удалить эту запись?')) {
+                expenses = expenses.filter(exp => exp.id !== id);
+                saveExpenses();
+                renderExpenses();
+            }
         }
 
         function saveExpenses() {
             localStorage.setItem('gtd-expenses', JSON.stringify(expenses));
         }
 
-        // Инициализация при загрузке
+        // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
             renderTasks();
             renderChecklists();
