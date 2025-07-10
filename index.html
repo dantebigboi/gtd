@@ -3,1498 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTD Flow | Умный планировщик задач</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <title>GTD Система</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css">
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-light: #a5b4fc;
-            --primary-dark: #4f46e5;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --gray: #94a3b8;
-            --gray-light: #e2e8f0;
-            --low-priority: #10b981;
-            --medium-priority: #f59e0b;
-            --high-priority: #ef4444;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        body {
-            background-color: #f1f5f9;
-            color: var(--dark);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--gray-light);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-dark);
-        }
-
-        .logo i {
-            font-size: 1.8rem;
-        }
-
-        .user-panel {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .stats-card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: var(--card-shadow);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .stats-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--primary-light);
-            color: var(--primary-dark);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .stats-info h3 {
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-
-        .stats-info p {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .main-layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 25px;
-        }
-
-        .sidebar {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-            height: fit-content;
-        }
-
-        .sidebar-section {
-            margin-bottom: 25px;
-        }
-
-        .sidebar-title {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--gray);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-menu {
-            list-style: none;
-        }
-
-        .nav-item {
-            margin-bottom: 5px;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            color: var(--dark);
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background-color: var(--primary-light);
-            color: var(--primary-dark);
-        }
-
-        .nav-link i {
-            width: 20px;
-            text-align: center;
-        }
-
-        .tag-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .tag {
-            background-color: var(--gray-light);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tag:hover, .tag.active {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .priority-filter {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .priority-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .priority-item:hover, .priority-item.active {
-            background-color: var(--gray-light);
-        }
-
-        .priority-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .low-dot {
-            background-color: var(--low-priority);
-        }
-
-        .medium-dot {
-            background-color: var(--medium-priority);
-        }
-
-        .high-dot {
-            background-color: var(--high-priority);
-        }
-
-        .content-area {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .quick-actions {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .btn-outline {
-            background: white;
-            border: 1px solid var(--gray-light);
-            color: var(--dark);
-        }
-
-        .btn-outline:hover {
-            background-color: var(--gray-light);
-        }
-
-        .task-form {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 20px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--dark);
-            font-size: 0.9rem;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid var(--gray-light);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        .task-columns {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .task-column {
-            background: white;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .column-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--gray-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .column-title {
-            font-weight: 600;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .task-count {
-            background-color: var(--gray-light);
-            color: var(--dark);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-
-        .task-list {
-            padding: 15px;
-            min-height: 200px;
-        }
-
-        .task-card {
-            background-color: white;
-            border-left: 4px solid var(--primary);
-            margin-bottom: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s;
-            cursor: grab;
-        }
-
-        .task-card:hover {
-            box-shadow: var(--card-shadow-hover);
-            transform: translateY(-2px);
-        }
-
-        .task-card.completed {
-            border-left-color: var(--success);
-            opacity: 0.8;
-        }
-
-        .task-card.overdue {
-            border-left-color: var(--danger);
-        }
-
-        .task-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-
-        .task-title {
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            flex-grow: 1;
-            word-break: break-word;
-        }
-
-        .task-priority {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            margin-left: 10px;
-            flex-shrink: 0;
-        }
-
-        .priority-low {
-            background-color: var(--low-priority);
-        }
-
-        .priority-medium {
-            background-color: var(--medium-priority);
-        }
-
-        .priority-high {
-            background-color: var(--high-priority);
-        }
-
-        .task-description {
-            color: var(--gray);
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-
-        .task-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin: 10px 0;
-        }
-
-        .task-tag {
-            background-color: #e0e7ff;
-            color: var(--primary-dark);
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-        }
-
-        .task-due {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.8rem;
-            color: var(--gray);
-            margin-top: 8px;
-        }
-
-        .task-due.overdue {
-            color: var(--danger);
-            font-weight: bold;
-        }
-
-        .task-due i {
-            font-size: 0.9rem;
-        }
-
-        .task-checklist {
-            margin: 10px 0;
-            border-top: 1px solid var(--gray-light);
-            padding-top: 10px;
-        }
-
-        .checklist-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .checklist-item input[type="checkbox"] {
-            accent-color: var(--success);
-        }
-
-        .checklist-item label {
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-
-        .checklist-item.completed label {
-            text-decoration: line-through;
-            color: var(--gray);
-        }
-
-        .task-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .task-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--gray);
-            transition: color 0.3s;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .task-btn:hover {
-            color: var(--dark);
-        }
-
-        .xp-badge {
-            background-color: var(--warning);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: white;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 30px;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--gray);
-        }
-
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            padding: 15px 25px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 1001;
-            transform: translateX(150%);
-            transition: transform 0.3s ease-in-out;
-            border-left: 4px solid var(--primary);
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification-icon {
-            font-size: 1.5rem;
-            color: var(--primary);
-        }
-
-        .notification-info .notification-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .notification-close {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--gray);
-        }
-
-        .progress-container {
-            margin-top: 30px;
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .progress-title {
-            font-weight: 600;
-        }
-
-        .progress-bar {
-            height: 10px;
-            background-color: var(--gray-light);
-            border-radius: 5px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background-color: var(--success);
-            border-radius: 5px;
-            transition: width 0.5s ease;
-        }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-
-        .achievements {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .achievement {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--warning);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .achievement::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--dark);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .achievement:hover::after {
-            opacity: 1;
-            visibility: visible;
-            bottom: calc(100% + 5px);
-        }
-
-        @media (max-width: 1024px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-            }
-            
-            .sidebar {
-                order: 2;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .task-columns {
-                grid-template-columns: 1fr;
-            }
-            
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            
-            .user-panel {
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
+        /* Общие стили */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        header { background: #2c3e50; color: white; padding: 1rem; text-align: center; }
+        nav a { color: white; margin: 0 10px; text-decoration: none; cursor: pointer; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .tab { display: none; }
+        .active-tab { display: block; }
+
+        /* Стили для задач (GTD) */
+        .columns { display: flex; gap: 20px; flex-wrap: wrap; }
+        .column { flex: 1; min-width: 250px; background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tasks { min-height: 100px; margin: 10px 0; }
+        .task { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 8px; cursor: move; }
+        .task-actions button { background: none; border: none; cursor: pointer; }
+
+        /* Стили для бюджета */
+        .expense-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+
+        /* Стили для чек-листов */
+        .checklist { margin-bottom: 20px; }
+        .checklist-item { display: flex; align-items: center; margin: 5px 0; }
+
+        /* Адаптивность */
+        @media (max-width: 768px) { .columns { flex-direction: column; } }
     </style>
 </head>
 <body>
+    <header>
+        <h1>GTD Система</h1>
+        <nav>
+            <a onclick="showTab('tasks')">Задачи</a>
+            <a onclick="showTab('checklists')">Чек-листы</a>
+            <a onclick="showTab('budget')">Бюджет</a>
+        </nav>
+    </header>
+
     <div class="container">
-        <header>
-            <div class="logo">
-                <i class="fas fa-check-circle"></i>
-                <span>GTD Flow</span>
+        <!-- Вкладка задач -->
+        <div id="tasks" class="tab active-tab">
+            <div class="controls">
+                <input type="text" id="search" placeholder="Поиск задач...">
+                <button id="clear-done">Очистить выполненные</button>
             </div>
-            <div class="user-panel">
-                <div class="stats-card">
-                    <div class="stats-icon">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <div class="stats-info">
-                        <h3>Продуктивность</h3>
-                        <p>85%</p>
-                    </div>
+            <div class="columns" id="columns">
+                <div class="column" id="inbox">
+                    <h2>📥 Входящие</h2>
+                    <div class="tasks" id="inbox-tasks"></div>
+                    <input type="text" class="new-task-input" placeholder="+ Новая задача">
                 </div>
-                <div class="stats-card">
-                    <div class="stats-icon">
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <div class="stats-info">
-                        <h3>Очки</h3>
-                        <p>1,240 <span class="xp-badge">+15</span></p>
-                    </div>
+                <div class="column" id="in-progress">
+                    <h2>⚡ В работе</h2>
+                    <div class="tasks" id="in-progress-tasks"></div>
                 </div>
-                <div class="user-avatar">У</div>
+                <div class="column" id="done">
+                    <h2>✅ Выполнено</h2>
+                    <div class="tasks" id="done-tasks"></div>
+                </div>
             </div>
-        </header>
+        </div>
 
-        <div class="main-layout">
-            <div class="sidebar">
-                <div class="sidebar-section">
-                    <h3 class="sidebar-title"><i class="fas fa-bars"></i> Меню</h3>
-                    <ul class="nav-menu">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link active">
-                                <i class="fas fa-tasks"></i>
-                                <span>Все задачи</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-calendar-day"></i>
-                                <span>Сегодня</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-calendar-week"></i>
-                                <span>Предстоящие</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Завершённые</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="sidebar-section">
-                    <h3 class="sidebar-title"><i class="fas fa-tags"></i> Теги</h3>
-                    <div class="tag-list">
-                        <div class="tag active">Все</div>
-                        <div class="tag">Работа</div>
-                        <div class="tag">Личное</div>
-                        <div class="tag">Здоровье</div>
-                        <div class="tag">Финансы</div>
-                        <div class="tag">Обучение</div>
-                        <div class="tag">Проект X</div>
-                    </div>
-                </div>
-                
-                <div class="sidebar-section">
-                    <h3 class="sidebar-title"><i class="fas fa-signal"></i> Приоритет</h3>
-                    <div class="priority-filter">
-                        <div class="priority-item active">
-                            <div class="priority-dot"></div>
-                            <span>Все</span>
-                        </div>
-                        <div class="priority-item">
-                            <div class="priority-dot low-dot"></div>
-                            <span>Низкий</span>
-                        </div>
-                        <div class="priority-item">
-                            <div class="priority-dot medium-dot"></div>
-                            <span>Средний</span>
-                        </div>
-                        <div class="priority-item">
-                            <div class="priority-dot high-dot"></div>
-                            <span>Высокий</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="sidebar-section">
-                    <h3 class="sidebar-title"><i class="fas fa-trophy"></i> Достижения</h3>
-                    <div class="achievements">
-                        <div class="achievement" data-tooltip="Первая задача">
-                            <i class="fas fa-medal"></i>
-                        </div>
-                        <div class="achievement" data-tooltip="5 задач за день">
-                            <i class="fas fa-rocket"></i>
-                        </div>
-                        <div class="achievement" data-tooltip="Неделя без просрочек">
-                            <i class="fas fa-fire"></i>
-                        </div>
-                    </div>
-                </div>
+        <!-- Вкладка чек-листов -->
+        <div id="checklists" class="tab">
+            <div class="checklist-form">
+                <input type="text" id="checklist-name" placeholder="Название чек-листа">
+                <button onclick="addChecklist()">Создать</button>
             </div>
+            <div class="checklists" id="checklists-container"></div>
+        </div>
 
-            <div class="content-area">
-                <div class="task-form">
-                    <h2><i class="fas fa-plus-circle"></i> Новая задача</h2>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="taskTitle">Название задачи</label>
-                            <input type="text" id="taskTitle" class="form-control" placeholder="Что нужно сделать?">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="taskDueDate">Срок выполнения</label>
-                            <input type="text" id="taskDueDate" class="form-control datepicker" placeholder="Выберите дату">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="taskDescription">Описание</label>
-                        <textarea id="taskDescription" class="form-control" rows="3" placeholder="Детали задачи..."></textarea>
-                    </div>
-                    
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="taskPriority">Приоритет</label>
-                            <select id="taskPriority" class="form-control">
-                                <option value="low">Низкий</option>
-                                <option value="medium" selected>Средний</option>
-                                <option value="high">Высокий</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="taskTags">Теги (через запятую)</label>
-                            <input type="text" id="taskTags" class="form-control" placeholder="работа, срочно, проект">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Чек-лист</label>
-                        <div id="checklistItems">
-                            <div class="checklist-item">
-                                <input type="text" class="form-control checklist-input" placeholder="Добавьте пункт чек-листа">
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-outline" id="addChecklistItem" style="margin-top: 10px;">
-                            <i class="fas fa-plus"></i> Добавить пункт
-                        </button>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-outline">
-                            <i class="fas fa-times"></i> Отмена
-                        </button>
-                        <button type="button" class="btn btn-primary" id="addTaskBtn">
-                            <i class="fas fa-plus"></i> Добавить задачу
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="progress-container">
-                    <div class="progress-header">
-                        <h3 class="progress-title">Ваш прогресс</h3>
-                        <span>85%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 85%"></div>
-                    </div>
-                    <div class="progress-info">
-                        <span>Завершено 17 из 20 задач</span>
-                        <span>+85 XP</span>
-                    </div>
-                </div>
-                
-                <div class="quick-actions">
-                    <button class="btn btn-outline">
-                        <i class="fas fa-filter"></i> Фильтры
-                    </button>
-                    <button class="btn btn-outline">
-                        <i class="fas fa-sort"></i> Сортировка
-                    </button>
-                    <button class="btn btn-outline">
-                        <i class="fas fa-search"></i> Поиск
-                    </button>
-                </div>
-                
-                <div class="task-columns">
-                    <div class="task-column">
-                        <div class="column-header">
-                            <h3 class="column-title"><i class="fas fa-inbox"></i> Входящие</h3>
-                            <span class="task-count">5</span>
-                        </div>
-                        <div class="task-list" id="inbox">
-                            <!-- Пример задачи -->
-                            <div class="task-card">
-                                <div class="task-card-header">
-                                    <div class="task-title">Разработать новый интерфейс</div>
-                                    <div class="task-priority priority-high"></div>
-                                </div>
-                                <div class="task-description">
-                                    Создать макеты для главной страницы и личного кабинета
-                                </div>
-                                <div class="task-tags">
-                                    <span class="task-tag">Работа</span>
-                                    <span class="task-tag">Дизайн</span>
-                                </div>
-                                <div class="task-checklist">
-                                    <div class="checklist-item">
-                                        <input type="checkbox" id="check1">
-                                        <label for="check1">Создать wireframes</label>
-                                    </div>
-                                    <div class="checklist-item">
-                                        <input type="checkbox" id="check2">
-                                        <label for="check2">Подобрать цветовую схему</label>
-                                    </div>
-                                </div>
-                                <div class="task-due">
-                                    <i class="far fa-clock"></i>
-                                    Сегодня, 18:00
-                                </div>
-                                <div class="task-actions">
-                                    <button class="task-btn">
-                                        <i class="far fa-edit"></i>
-                                    </button>
-                                    <button class="task-btn">
-                                        <i class="far fa-trash-alt"></i>
-                                    </button>
-                                    <button class="task-btn">
-                                        <i class="far fa-check-circle"></i> Завершить
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="task-column">
-                        <div class="column-header">
-                            <h3 class="column-title"><i class="fas fa-spinner"></i> В процессе</h3>
-                            <span class="task-count">3</span>
-                        </div>
-                        <div class="task-list" id="inProgress">
-                            <!-- Пример задачи -->
-                            <div class="task-card">
-                                <div class="task-card-header">
-                                    <div class="task-title">Написать документацию</div>
-                                    <div class="task-priority priority-medium"></div>
-                                </div>
-                                <div class="task-description">
-                                    Подготовить руководство пользователя для нового ПО
-                                </div>
-                                <div class="task-tags">
-                                    <span class="task-tag">Работа</span>
-                                    <span class="task-tag">Документация</span>
-                                </div>
-                                <div class="task-due">
-                                    <i class="far fa-clock"></i>
-                                    Завтра, 12:00
-                                </div>
-                                <div class="task-actions">
-                                    <button class="task-btn">
-                                        <i class="far fa-edit"></i>
-                                    </button>
-                                    <button class="task-btn">
-                                        <i class="far fa-trash-alt"></i>
-                                    </button>
-                                    <button class="task-btn">
-                                        <i class="far fa-check-circle"></i> Завершить
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="task-column">
-                        <div class="column-header">
-                            <h3 class="column-title"><i class="fas fa-check-circle"></i> Завершённые</h3>
-                            <span class="task-count">2</span>
-                        </div>
-                        <div class="task-list" id="completed">
-                            <!-- Пример задачи -->
-                            <div class="task-card completed">
-                                <div class="task-card-header">
-                                    <div class="task-title">Провести встречу с командой</div>
-                                    <div class="task-priority priority-low"></div>
-                                </div>
-                                <div class="task-description">
-                                    Обсудить текущие задачи и планы на следующую неделю
-                                </div>
-                                <div class="task-tags">
-                                    <span class="task-tag">Работа</span>
-                                    <span class="task-tag">Встреча</span>
-                                </div>
-                                <div class="task-checklist">
-                                    <div class="checklist-item completed">
-                                        <input type="checkbox" id="check3" checked>
-                                        <label for="check3">Подготовить agenda</label>
-                                    </div>
-                                    <div class="checklist-item completed">
-                                        <input type="checkbox" id="check4" checked>
-                                        <label for="check4">Разослать приглашения</label>
-                                    </div>
-                                </div>
-                                <div class="task-due">
-                                    <i class="far fa-clock"></i>
-                                    Вчера, 15:00
-                                </div>
-                                <div class="task-actions">
-                                    <button class="task-btn">
-                                        <i class="far fa-edit"></i>
-                                    </button>
-                                    <button class="task-btn">
-                                        <i class="far fa-trash-alt"></i>
-                                    </button>
-                                    <button class="task-btn">
-                                        <i class="fas fa-redo"></i> Открыть
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Вкладка бюджета -->
+        <div id="budget" class="tab">
+            <div class="budget-form">
+                <input type="text" id="expense-name" placeholder="Название">
+                <input type="number" id="expense-amount" placeholder="Сумма">
+                <button onclick="addExpense()">Добавить</button>
             </div>
+            <div class="expense-list" id="expense-list"></div>
         </div>
     </div>
 
-    <div class="modal" id="taskModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Редактирование задачи</h2>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <!-- Форма редактирования будет здесь -->
-            </div>
-        </div>
-    </div>
-
-    <div class="notification" id="notification">
-        <div class="notification-icon">
-            <i class="fas fa-bell"></i>
-        </div>
-        <div class="notification-info">
-            <div class="notification-title">Новая задача добавлена!</div>
-            <div class="notification-message">"Разработать новый интерфейс"</div>
-        </div>
-        <button class="notification-close">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+    <!-- Подключаем Dragula для перетаскивания -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
+    
+    <!-- Основной скрипт -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Инициализация календарей
-            flatpickr('.datepicker', {
-                enableTime: true,
-                dateFormat: "d.m.Y H:i",
-                time_24hr: true,
-                locale: "ru",
-                minDate: "today"
-            });
+        // ===== Общие функции =====
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active-tab'));
+            document.getElementById(tabId).classList.add('active-tab');
+        }
 
-            // Элементы DOM
-            const addTaskBtn = document.getElementById('addTaskBtn');
-            const addChecklistItemBtn = document.getElementById('addChecklistItem');
-            const checklistItemsContainer = document.getElementById('checklistItems');
-            
-            // Счетчик для генерации ID
-            let taskId = 1;
-            let checklistItemId = 1;
+        // ===== Логика задач (GTD) =====
+        let tasks = JSON.parse(localStorage.getItem('gtd-tasks')) || [];
+        
+        // Инициализация Drag & Drop
+        dragula([
+            document.getElementById('inbox-tasks'),
+            document.getElementById('in-progress-tasks'),
+            document.getElementById('done-tasks')
+        ]).on('drop', (el, target) => {
+            const taskId = el.dataset.id;
+            const newStatus = target.parentElement.id;
+            updateTaskStatus(taskId, newStatus);
+        });
 
-            // Добавление пункта чек-листа
-            addChecklistItemBtn.addEventListener('click', () => {
-                const newItem = document.createElement('div');
-                newItem.className = 'checklist-item';
-                newItem.innerHTML = `
-                    <input type="text" class="form-control checklist-input" placeholder="Добавьте пункт чек-листа">
-                    <button type="button" class="task-btn remove-checklist-item">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                checklistItemsContainer.appendChild(newItem);
-                
-                // Добавляем обработчик для кнопки удаления
-                newItem.querySelector('.remove-checklist-item').addEventListener('click', () => {
-                    newItem.remove();
+        // Добавление задачи
+        document.querySelector('.new-task-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                tasks.push({
+                    id: Date.now().toString(),
+                    text: e.target.value,
+                    status: 'inbox',
+                    createdAt: new Date().toISOString()
                 });
-            });
+                saveTasks();
+                renderTasks();
+                e.target.value = '';
+            }
+        });
 
-            // Добавление новой задачи
-            addTaskBtn.addEventListener('click', () => {
-                const title = document.getElementById('taskTitle').value.trim();
-                const description = document.getElementById('taskDescription').value.trim();
-                const dueDate = document.getElementById('taskDueDate').value;
-                const priority = document.getElementById('taskPriority').value;
-                const tags = document.getElementById('taskTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
-                
-                // Получаем пункты чек-листа
-                const checklistItems = Array.from(document.querySelectorAll('.checklist-input'))
-                    .map(input => input.value.trim())
-                    .filter(item => item);
-                
-                if (!title) {
-                    showNotification('Пожалуйста, введите название задачи', 'error');
-                    return;
-                }
-                
-                // Создаем задачу
-                const task = {
-                    id: `task_${taskId++}`,
-                    title,
-                    description,
-                    dueDate: dueDate || null,
-                    priority,
-                    tags,
-                    checklist: checklistItems,
-                    category: 'inbox',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                
-                // Здесь должна быть логика сохранения и отображения задачи
-                console.log('Новая задача:', task);
-                showNotification(`Задача "${title}" добавлена!`, 'success');
-                
-                // Очищаем форму
-                document.getElementById('taskTitle').value = '';
-                document.getElementById('taskDescription').value = '';
-                document.getElementById('taskDueDate').value = '';
-                document.getElementById('taskPriority').value = 'medium';
-                document.getElementById('taskTags').value = '';
-                
-                // Очищаем чек-лист, оставляя одно поле
-                checklistItemsContainer.innerHTML = `
-                    <div class="checklist-item">
-                        <input type="text" class="form-control checklist-input" placeholder="Добавьте пункт чек-листа">
+        // Рендер задач
+        function renderTasks() {
+            const columns = {
+                'inbox': document.getElementById('inbox-tasks'),
+                'in-progress': document.getElementById('in-progress-tasks'),
+                'done': document.getElementById('done-tasks')
+            };
+
+            Object.values(columns).forEach(col => col.innerHTML = '');
+            
+            tasks.forEach(task => {
+                const taskEl = document.createElement('div');
+                taskEl.className = 'task';
+                taskEl.dataset.id = task.id;
+                taskEl.innerHTML = `
+                    <div class="task-text">${task.text}</div>
+                    <div class="task-actions">
+                        <button onclick="editTask('${task.id}')">✏️</button>
+                        <button onclick="deleteTask('${task.id}')">🗑️</button>
                     </div>
                 `;
+                columns[task.status].appendChild(taskEl);
             });
+        }
 
-            // Показ уведомлений
-            function showNotification(message, type = 'info') {
-                const notification = document.getElementById('notification');
-                const messageEl = notification.querySelector('.notification-message');
-                
-                // Устанавливаем сообщение
-                messageEl.textContent = message;
-                
-                // Устанавливаем цвет в зависимости от типа
-                const colors = {
-                    info: '#3498db',
-                    success: '#10b981',
-                    warning: '#f59e0b',
-                    error: '#ef4444'
-                };
-                
-                notification.style.borderLeft = `4px solid ${colors[type]}`;
-                
-                // Показываем уведомление
-                notification.classList.add('show');
-                
-                // Автоматическое скрытие через 5 секунд
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                }, 5000);
+        // Сохранение задач
+        function saveTasks() {
+            localStorage.setItem('gtd-tasks', JSON.stringify(tasks));
+        }
+
+        // Удаление задачи
+        function deleteTask(id) {
+            tasks = tasks.filter(task => task.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+
+        // Редактирование задачи
+        function editTask(id) {
+            const task = tasks.find(t => t.id === id);
+            const newText = prompt('Редактировать задачу:', task.text);
+            if (newText !== null) {
+                task.text = newText.trim();
+                saveTasks();
+                renderTasks();
             }
+        }
 
-            // Закрытие уведомления
-            document.querySelector('.notification-close').addEventListener('click', () => {
-                document.getElementById('notification').classList.remove('show');
-            });
+        // Обновление статуса при перетаскивании
+        function updateTaskStatus(id, newStatus) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.status = newStatus;
+                saveTasks();
+            }
+        }
 
-            // Пример функции для перетаскивания задач
-            const taskCards = document.querySelectorAll('.task-card');
-            taskCards.forEach(card => {
-                card.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', card.id);
-                    setTimeout(() => {
-                        card.style.opacity = '0.4';
-                    }, 0);
-                });
-                
-                card.addEventListener('dragend', () => {
-                    card.style.opacity = '1';
-                });
-            });
+        // ===== Логика чек-листов =====
+        let checklists = JSON.parse(localStorage.getItem('gtd-checklists')) || [];
 
-            // Пример обработки завершения задачи
-            document.querySelectorAll('.task-btn .fa-check-circle').forEach(btn => {
-                btn.closest('.task-btn').addEventListener('click', function() {
-                    const taskCard = this.closest('.task-card');
-                    taskCard.classList.add('completed');
-                    showNotification('Задача завершена! +10 XP', 'success');
-                    
-                    // Здесь должна быть логика перемещения задачи в "Завершённые"
+        function renderChecklists() {
+            const container = document.getElementById('checklists-container');
+            container.innerHTML = '';
+            
+            checklists.forEach(checklist => {
+                const checklistEl = document.createElement('div');
+                checklistEl.className = 'checklist';
+                checklistEl.innerHTML = `
+                    <h3>${checklist.name}</h3>
+                    <ul id="checklist-${checklist.id}"></ul>
+                    <input type="text" data-checklist-id="${checklist.id}" placeholder="+ Добавить пункт" onkeypress="if(event.key=='Enter') addChecklistItem('${checklist.id}', this)">
+                `;
+                container.appendChild(checklistEl);
+
+                const itemsList = document.getElementById(`checklist-${checklist.id}`);
+                checklist.items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'checklist-item';
+                    li.innerHTML = `
+                        <input type="checkbox" ${item.done ? 'checked' : ''} 
+                               onchange="toggleChecklistItem('${checklist.id}', '${item.id}')">
+                        <span>${item.text}</span>
+                        <button onclick="removeChecklistItem('${checklist.id}', '${item.id}')">🗑️</button>
+                    `;
+                    itemsList.appendChild(li);
                 });
             });
+        }
+
+        function addChecklist() {
+            const name = document.getElementById('checklist-name').value;
+            if (name) {
+                checklists.push({
+                    id: Date.now().toString(),
+                    name,
+                    items: []
+                });
+                saveChecklists();
+                renderChecklists();
+                document.getElementById('checklist-name').value = '';
+            }
+        }
+
+        function addChecklistItem(checklistId, inputEl) {
+            if (inputEl.value.trim()) {
+                const checklist = checklists.find(c => c.id === checklistId);
+                if (checklist) {
+                    checklist.items.push({
+                        id: Date.now().toString(),
+                        text: inputEl.value.trim(),
+                        done: false
+                    });
+                    saveChecklists();
+                    renderChecklists();
+                    inputEl.value = '';
+                }
+            }
+        }
+
+        function toggleChecklistItem(checklistId, itemId) {
+            const checklist = checklists.find(c => c.id === checklistId);
+            if (checklist) {
+                const item = checklist.items.find(i => i.id === itemId);
+                if (item) item.done = !item.done;
+                saveChecklists();
+            }
+        }
+
+        function removeChecklistItem(checklistId, itemId) {
+            const checklist = checklists.find(c => c.id === checklistId);
+            if (checklist) {
+                checklist.items = checklist.items.filter(i => i.id !== itemId);
+                saveChecklists();
+                renderChecklists();
+            }
+        }
+
+        function saveChecklists() {
+            localStorage.setItem('gtd-checklists', JSON.stringify(checklists));
+        }
+
+        // ===== Логика бюджета =====
+        let expenses = JSON.parse(localStorage.getItem('gtd-expenses')) || [];
+
+        function renderExpenses() {
+            const list = document.getElementById('expense-list');
+            list.innerHTML = '';
+            
+            expenses.forEach(exp => {
+                const item = document.createElement('div');
+                item.className = 'expense-item';
+                item.innerHTML = `
+                    <span>${exp.name}</span>
+                    <span>${exp.amount} ₽</span>
+                    <button onclick="removeExpense('${exp.id}')">Удалить</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function addExpense() {
+            const name = document.getElementById('expense-name').value;
+            const amount = parseFloat(document.getElementById('expense-amount').value);
+            
+            if (name && amount) {
+                expenses.push({
+                    id: Date.now().toString(),
+                    name,
+                    amount
+                });
+                saveExpenses();
+                renderExpenses();
+                document.getElementById('expense-name').value = '';
+                document.getElementById('expense-amount').value = '';
+            }
+        }
+
+        function removeExpense(id) {
+            expenses = expenses.filter(exp => exp.id !== id);
+            saveExpenses();
+            renderExpenses();
+        }
+
+        function saveExpenses() {
+            localStorage.setItem('gtd-expenses', JSON.stringify(expenses));
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            renderChecklists();
+            renderExpenses();
         });
     </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ru">
-<!-- [Остальная часть HTML остается такой же, пока не дойдем до JavaScript] -->
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Инициализация календарей
-        flatpickr('.datepicker', {
-            enableTime: true,
-            dateFormat: "d.m.Y H:i",
-            time_24hr: true,
-            locale: "ru",
-            minDate: "today"
-        });
-
-        // Элементы DOM
-        const addTaskBtn = document.getElementById('addTaskBtn');
-        const addChecklistItemBtn = document.getElementById('addChecklistItem');
-        const checklistItemsContainer = document.getElementById('checklistItems');
-        const inboxList = document.getElementById('inbox');
-        
-        // Счетчик для генерации ID
-        let taskId = 1;
-        let checklistItemId = 1;
-
-        // Добавление пункта чек-листа
-        addChecklistItemBtn.addEventListener('click', () => {
-            const newItem = document.createElement('div');
-            newItem.className = 'checklist-item';
-            newItem.innerHTML = `
-                <input type="text" class="form-control checklist-input" placeholder="Добавьте пункт чек-листа">
-                <button type="button" class="task-btn remove-checklist-item">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            checklistItemsContainer.appendChild(newItem);
-            
-            // Добавляем обработчик для кнопки удаления
-            newItem.querySelector('.remove-checklist-item').addEventListener('click', () => {
-                newItem.remove();
-            });
-        });
-
-        // Добавление новой задачи
-        addTaskBtn.addEventListener('click', () => {
-            const title = document.getElementById('taskTitle').value.trim();
-            const description = document.getElementById('taskDescription').value.trim();
-            const dueDate = document.getElementById('taskDueDate').value;
-            const priority = document.getElementById('taskPriority').value;
-            const tags = document.getElementById('taskTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
-            
-            // Получаем пункты чек-листа
-            const checklistItems = Array.from(document.querySelectorAll('.checklist-input'))
-                .map(input => input.value.trim())
-                .filter(item => item);
-            
-            if (!title) {
-                showNotification('Пожалуйста, введите название задачи', 'error');
-                return;
-            }
-            
-            // Создаем HTML для новой задачи
-            const taskHtml = createTaskHtml({
-                id: `task_${taskId++}`,
-                title,
-                description,
-                dueDate,
-                priority,
-                tags,
-                checklist: checklistItems
-            });
-            
-            // Добавляем задачу в колонку "Входящие"
-            inboxList.insertAdjacentHTML('afterbegin', taskHtml);
-            
-            // Обновляем счетчик задач
-            updateTaskCount('inbox');
-            
-            showNotification(`Задача "${title}" добавлена!`, 'success');
-            
-            // Очищаем форму
-            document.getElementById('taskTitle').value = '';
-            document.getElementById('taskDescription').value = '';
-            document.getElementById('taskDueDate').value = '';
-            document.getElementById('taskPriority').value = 'medium';
-            document.getElementById('taskTags').value = '';
-            
-            // Очищаем чек-лист, оставляя одно поле
-            checklistItemsContainer.innerHTML = `
-                <div class="checklist-item">
-                    <input type="text" class="form-control checklist-input" placeholder="Добавьте пункт чек-листа">
-                </div>
-            `;
-            
-            // Добавляем обработчики событий для новой задачи
-            addTaskEventListeners(document.querySelector(`#inbox .task-card:first-child`));
-        });
-
-        // Функция для создания HTML задачи
-        function createTaskHtml(task) {
-            const priorityClasses = {
-                low: 'priority-low',
-                medium: 'priority-medium',
-                high: 'priority-high'
-            };
-            
-            const priorityClass = priorityClasses[task.priority] || 'priority-medium';
-            
-            // Форматируем дату, если она есть
-            let dueDateHtml = '';
-            if (task.dueDate) {
-                dueDateHtml = `
-                    <div class="task-due">
-                        <i class="far fa-clock"></i>
-                        ${task.dueDate}
-                    </div>
-                `;
-            }
-            
-            // Создаем HTML для тегов
-            let tagsHtml = '';
-            if (task.tags && task.tags.length > 0) {
-                tagsHtml = `
-                    <div class="task-tags">
-                        ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
-                    </div>
-                `;
-            }
-            
-            // Создаем HTML для чек-листа
-            let checklistHtml = '';
-            if (task.checklist && task.checklist.length > 0) {
-                checklistHtml = `
-                    <div class="task-checklist">
-                        ${task.checklist.map((item, index) => `
-                            <div class="checklist-item">
-                                <input type="checkbox" id="check_${task.id}_${index}">
-                                <label for="check_${task.id}_${index}">${item}</label>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-            
-            return `
-                <div class="task-card" id="${task.id}">
-                    <div class="task-card-header">
-                        <div class="task-title">${task.title}</div>
-                        <div class="task-priority ${priorityClass}"></div>
-                    </div>
-                    <div class="task-description">
-                        ${task.description || ''}
-                    </div>
-                    ${tagsHtml}
-                    ${checklistHtml}
-                    ${dueDateHtml}
-                    <div class="task-actions">
-                        <button class="task-btn edit-task">
-                            <i class="far fa-edit"></i>
-                        </button>
-                        <button class="task-btn delete-task">
-                            <i class="far fa-trash-alt"></i>
-                        </button>
-                        <button class="task-btn complete-task">
-                            <i class="far fa-check-circle"></i> Завершить
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Функция для обновления счетчика задач
-        function updateTaskCount(columnId) {
-            const column = document.getElementById(columnId);
-            if (column) {
-                const taskCount = column.querySelectorAll('.task-card').length;
-                const countElement = column.closest('.task-column').querySelector('.task-count');
-                if (countElement) {
-                    countElement.textContent = taskCount;
-                }
-            }
-        }
-        
-        // Функция для добавления обработчиков событий к задаче
-        function addTaskEventListeners(taskElement) {
-            if (!taskElement) return;
-            
-            // Обработчик для кнопки удаления
-            taskElement.querySelector('.delete-task').addEventListener('click', function() {
-                if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
-                    taskElement.remove();
-                    updateTaskCount(taskElement.closest('.task-list').id);
-                    showNotification('Задача удалена', 'info');
-                }
-            });
-            
-            // Обработчик для кнопки завершения
-            taskElement.querySelector('.complete-task').addEventListener('click', function() {
-                taskElement.classList.add('completed');
-                const completedList = document.getElementById('completed');
-                if (completedList) {
-                    completedList.insertAdjacentHTML('afterbegin', taskElement.outerHTML);
-                    taskElement.remove();
-                    
-                    // Обновляем счетчики задач
-                    updateTaskCount('inbox');
-                    updateTaskCount('completed');
-                    
-                    // Добавляем обработчики для перемещенной задачи
-                    addTaskEventListeners(completedList.querySelector('.task-card:first-child'));
-                }
-                showNotification('Задача завершена! +10 XP', 'success');
-            });
-            
-            // Обработчик для кнопки редактирования
-            taskElement.querySelector('.edit-task').addEventListener('click', function() {
-                // Здесь можно добавить логику редактирования задачи
-                showNotification('Функция редактирования пока не реализована', 'warning');
-            });
-        }
-
-        // Показ уведомлений
-        function showNotification(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            const messageEl = notification.querySelector('.notification-message');
-            
-            // Устанавливаем сообщение
-            messageEl.textContent = message;
-            
-            // Устанавливаем цвет в зависимости от типа
-            const colors = {
-                info: '#3498db',
-                success: '#10b981',
-                warning: '#f59e0b',
-                error: '#ef4444'
-            };
-            
-            notification.style.borderLeft = `4px solid ${colors[type]}`;
-            
-            // Показываем уведомление
-            notification.classList.add('show');
-            
-            // Автоматическое скрытие через 5 секунд
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 5000);
-        }
-
-        // Закрытие уведомления
-        document.querySelector('.notification-close').addEventListener('click', () => {
-            document.getElementById('notification').classList.remove('show');
-        });
-
-        // Добавляем обработчики событий для существующих задач при загрузке
-        document.querySelectorAll('.task-card').forEach(task => {
-            addTaskEventListeners(task);
-        });
-    });
-</script>
 </body>
 </html>
